@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 390" width="520" height="390">
+
+  <!-- ── ICON MARK ── -->
+  <g transform="translate(260,155)">
+
+    <!-- Blue main circle -->
+    <circle cx="0" cy="0" r="100" fill="#29ABE2"/>
+
+    <!-- White swoosh arc 1 — top curve -->
+    <path d="M -78,-28 C -62,-80 18,-88 65,-52 C 82,-38 88,-16 76,4"
+          fill="none" stroke="#ffffff" stroke-width="17" stroke-linecap="round" opacity="0.95"/>
+
+    <!-- White swoosh arc 2 — Q tail / inner curve -->
+    <path d="M 12,48 C 38,30 58,4 48,-22 C 38,-44 14,-48 -2,-38"
+          fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" opacity="0.95"/>
+
+    <!-- Dark gray angular pointer — bottom pointing down -->
+    <path d="M -52,78 C -38,100 -8,138 0,148 C 8,138 38,100 52,78 Z"
+          fill="#555B61"/>
+
+    <!-- Slight highlight on pointer -->
+    <path d="M -10,90 C -4,110 0,130 0,148 C -6,136 -20,110 -28,95 Z"
+          fill="rgba(255,255,255,0.12)"/>
+
+  </g>
+
+  <!-- ── LOGOTYPE TEXT ── -->
+
+  <!-- "CAPITAL" — dark charcoal -->
+  <text x="260" y="318"
+        text-anchor="middle"
+        font-family="'Arial Black','Helvetica Neue',Arial,sans-serif"
+        font-size="42"
+        font-weight="900"
+        fill="#4A4A4A"
+        letter-spacing="2">CAPITAL<tspan fill="#29ABE2">QUEST</tspan></text>
+
+  <!-- "FUNDING" — brand blue, centered below -->
+  <text x="260" y="362"
+        text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',Arial,sans-serif"
+        font-size="30"
+        font-weight="700"
+        fill="#29ABE2"
+        letter-spacing="9">FUNDING</text>
+
+</svg>

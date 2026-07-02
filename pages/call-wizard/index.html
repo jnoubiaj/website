@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capital Quest — Call Wizard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B1416;
+  --bg-alt:#111C1F;
+  --surface:#17252A;
+  --surface-2:#1E3036;
+  --ink:#F4F8FA;
+  --ink-soft:#C7D1D5;
+  --muted:#7B8A90;
+  --line:#25343A;
+  --line-soft:#1B2A2F;
+  --brand:#22A7F0;
+  --brand-dark:#1890D4;
+  --brand-soft:#7FCCF5;
+  --brand-bg:rgba(34,167,240,.12);
+  --brand-border:rgba(34,167,240,.35);
+  --gray-logo:#6E7C84;
+  --emerald:#2ECC71;
+  --emerald-bg:rgba(46,204,113,.14);
+  --amber:#F1C40F;
+  --amber-bg:rgba(241,196,15,.14);
+  --danger:#E74C3C;
+  --danger-bg:rgba(231,76,60,.14);
+  --radius:4px;
+  --radius-lg:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:'Geist',sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:14px;color:inherit}
+
+/* ============ TOP BAR ============ */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 24px;
+  background:#000;color:var(--ink);
+  border-bottom:1px solid #000;
+}
+.brand{
+  display:flex;align-items:center;gap:14px;
+}
+.brand .logo{
+  height:36px;width:auto;display:block;
+}
+.brand .divider{
+  width:1px;height:20px;background:#2A2A2A;align-self:center;
+}
+.brand .tool{
+  font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.18em;
+  color:var(--gray-logo);text-transform:uppercase;
+}
+.topbar-right{display:flex;align-items:center;gap:24px}
+.mode-toggle{display:flex;align-items:center;background:#111;border:1px solid #2A2A2A;border-radius:20px;padding:3px;gap:2px}
+.mode-btn{font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:5px 14px;border-radius:16px;border:none;cursor:pointer;transition:background .2s,color .2s;background:transparent;color:var(--muted)}
+.mode-btn.active{background:var(--brand);color:#000;font-weight:600}
+.timer{
+  font-family:'Geist Mono',monospace;font-size:13px;
+  color:var(--brand);
+  display:flex;align-items:center;gap:8px;
+}
+.timer::before{
+  content:"";width:6px;height:6px;border-radius:50%;background:var(--brand);
+  animation:pulse 2s infinite;
+  box-shadow:0 0 8px var(--brand);
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.prospect-badge{
+  font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--gray-logo);
+}
+.prospect-badge b{color:var(--ink);font-weight:500}
+
+/* ============ LAYOUT ============ */
+.layout{
+  display:grid;
+  grid-template-columns:260px 1fr 320px;
+  min-height:calc(100vh - 61px);
+}
+.sidebar{
+  background:var(--bg-alt);
+  border-right:1px solid var(--line);
+  padding:24px 0;
+  position:sticky;top:61px;height:calc(100vh - 61px);
+  overflow-y:auto;
+}
+.main{
+  padding:28px 40px 80px;
+  max-width:none;
+}
+.tools{
+  background:var(--bg-alt);
+  border-left:1px solid var(--line);
+  padding:24px 22px;
+  position:sticky;top:61px;height:calc(100vh - 61px);
+  overflow-y:auto;
+}
+
+/* ============ SIDEBAR NAV ============ */
+.nav-label{
+  font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.2em;
+  color:var(--muted);text-transform:uppercase;
+  padding:0 24px;margin-bottom:10px;
+}
+.nav-list{list-style:none;margin-bottom:28px}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 24px;
+  cursor:pointer;
+  border-left:2px solid transparent;
+  transition:background .15s,border-color .15s;
+  font-size:13.5px;
+  color:var(--ink-soft);
+}
+.nav-item:hover{background:rgba(34,167,240,.08)}
+.nav-item.active{
+  background:var(--surface);
+  border-left-color:var(--brand);
+  color:var(--ink);font-weight:500;
+}
+.nav-item.done{color:var(--muted)}
+.nav-item .idx{
+  font-family:'Geist Mono',monospace;font-size:11px;
+  color:var(--muted);min-width:18px;
+}
+.nav-item.active .idx{color:var(--brand)}
+.nav-item .check{
+  margin-left:auto;width:14px;height:14px;
+  border:1px solid var(--line);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:var(--emerald);
+}
+.nav-item.done .check{background:var(--emerald);border-color:var(--emerald);color:#fff}
+
+.nav-utility{padding:0 24px;margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
+.util-btn{
+  display:block;width:100%;text-align:left;
+  padding:9px 12px;margin-bottom:6px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);
+  font-size:12.5px;color:var(--ink-soft);
+  transition:all .15s;
+}
+.util-btn:hover{border-color:var(--brand);color:var(--ink)}
+.util-btn.danger{color:var(--danger)}
+
+/* ============ MAIN CONTENT ============ */
+.stage-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding-bottom:18px;margin-bottom:26px;
+  border-bottom:1px solid var(--line);
+}
+.stage-title{
+  font-size:32px;font-weight:300;letter-spacing:-.025em;line-height:1.1;
+  color:var(--ink);
+}
+.stage-title em{font-style:normal;color:var(--brand);font-weight:500}
+.stage-meta{
+  font-family:'Geist Mono',monospace;font-size:11px;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--muted);
+}
+
+/* Client info strip */
+.info-strip{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:16px 20px;margin-bottom:24px;
+}
+.info-strip-head{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+}
+.info-strip-head h3{
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;font-family:'Geist Mono',monospace;
+}
+.info-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+}
+.info-field label{
+  display:block;font-size:11px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;
+}
+.info-field input,.info-field select{
+  width:100%;padding:8px 10px;
+  background:var(--bg-alt);border:1px solid var(--line);
+  border-radius:var(--radius);
+  font-size:13.5px;color:var(--ink);
+}
+.info-field input:focus,.info-field select:focus{
+  outline:none;border-color:var(--brand);
+  box-shadow:0 0 0 3px var(--brand-bg);
+}
+.info-field input::placeholder{color:var(--muted)}
+
+/* Script blocks */
+.script-block{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:24px 28px;
+  margin-bottom:18px;
+  position:relative;
+}
+.script-block.highlight{
+  border-left:3px solid var(--brand);
+  background:linear-gradient(to right, var(--brand-bg) 0%, var(--surface) 12%);
+}
+.script-block.caution{
+  border-left:3px solid var(--danger);
+}
+.script-block-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.script-label{
+  font-family:'Geist Mono',monospace;font-size:10.5px;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--brand);font-weight:500;
+}
+.script-block.caution .script-label{color:var(--danger)}
+.script-heading{
+  font-size:20px;font-weight:500;letter-spacing:-.01em;margin-bottom:10px;
+  color:var(--ink);
+}
+.script-body{font-size:15px;line-height:1.7;color:var(--ink-soft)}
+.script-body p{margin-bottom:10px}
+.script-body strong{color:var(--ink);font-weight:500}
+.script-body .fill{
+  background:var(--brand-bg);
+  padding:1px 6px;border-radius:3px;
+  font-family:'Geist Mono',monospace;font-size:13px;
+  color:var(--brand-soft);
+  border:1px dashed var(--brand-border);
+}
+.script-body .fill.filled{
+  background:transparent;border:none;
+  color:var(--brand);font-weight:500;
+  font-family:'Geist',sans-serif;font-size:inherit;
+}
+.script-body .direction{
+  display:block;
+  font-style:italic;color:var(--muted);font-size:13px;
+  margin:6px 0;
+}
+.script-body .pause{
+  display:inline-block;
+  font-family:'Geist Mono',monospace;
+  background:var(--brand);color:#fff;
+  padding:2px 8px;border-radius:3px;font-size:11px;
+  letter-spacing:.1em;margin:0 2px;font-weight:500;
+}
+.script-body ul{margin:8px 0 12px 20px}
+.script-body li{margin-bottom:4px}
+
+/* Prompt checklist */
+.prompts{
+  display:flex;flex-direction:column;gap:8px;
+  margin-top:14px;padding-top:14px;
+  border-top:1px dashed var(--line);
+}
+.prompt{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 10px;border-radius:var(--radius);
+  cursor:pointer;transition:background .15s;
+}
+.prompt:hover{background:var(--bg-alt)}
+.prompt-check{
+  flex-shrink:0;width:16px;height:16px;
+  border:1.5px solid var(--line);border-radius:3px;
+  margin-top:2px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:transparent;
+  transition:all .15s;
+}
+.prompt.checked .prompt-check{
+  background:var(--emerald);border-color:var(--emerald);
+  color:#fff;
+}
+.prompt-text{font-size:14px;line-height:1.55;flex:1;color:var(--ink-soft)}
+.prompt.checked .prompt-text{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+
+/* Notes */
+.notes-block{
+  background:var(--bg-alt);border:1px dashed var(--line);
+  border-radius:var(--radius-lg);
+  padding:14px 18px;margin-top:16px;
+}
+.notes-block label{
+  display:block;font-family:'Geist Mono',monospace;
+  font-size:10.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:8px;
+}
+.notes-block textarea{
+  width:100%;min-height:70px;
+  background:transparent;border:none;
+  font-size:14px;line-height:1.5;color:var(--ink);
+  resize:vertical;
+}
+.notes-block textarea:focus{outline:none}
+
+/* Stage nav buttons */
+.stage-nav{
+  display:flex;gap:12px;margin-top:36px;
+  padding-top:24px;border-top:1px solid var(--line);
+}
+.btn{
+  padding:11px 22px;border-radius:var(--radius);
+  font-size:14px;font-weight:500;letter-spacing:.01em;
+  border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);
+  transition:all .15s;
+}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn-primary{
+  background:var(--brand);color:#fff;border-color:var(--brand);
+  margin-left:auto;
+  box-shadow:0 2px 10px rgba(34,167,240,.25);
+}
+.btn-primary:hover{background:var(--brand-dark);border-color:var(--brand-dark);color:#fff;box-shadow:0 4px 14px rgba(34,167,240,.4)}
+.btn-gold{
+  background:var(--brand);color:#fff;border-color:var(--brand);
+}
+.btn-gold:hover{background:var(--brand-dark);border-color:var(--brand-dark);color:#fff}
+
+/* ============ TOOLS PANEL ============ */
+.tool-section{margin-bottom:28px}
+.tool-head{
+  font-family:'Geist Mono',monospace;font-size:10.5px;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;font-weight:500;
+}
+.tool-card{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:14px 16px;margin-bottom:8px;
+}
+
+/* Tier calculator */
+.tier-result{
+  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);
+  color:#fff;
+  border-radius:var(--radius-lg);
+  padding:18px 20px;margin-bottom:14px;
+  text-align:center;
+  box-shadow:0 4px 20px rgba(34,167,240,.2);
+}
+.tier-result.empty{background:var(--surface-2);box-shadow:none}
+
+/* Funding Potential card */
+.potential-card{
+  background:var(--surface);
+  border:1px solid var(--brand-border);
+  border-radius:var(--radius-lg);
+  padding:16px 18px;margin-bottom:12px;
+  text-align:center;
+}
+.potential-card.active{
+  background:linear-gradient(180deg,var(--brand-bg) 0%,var(--surface) 100%);
+  box-shadow:0 4px 16px rgba(34,167,240,.15);
+}
+.potential-label{
+  font-family:'Geist Mono',monospace;font-size:10px;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:4px;
+}
+.potential-input{
+  font-size:20px;font-weight:500;color:var(--ink-soft);
+  margin-bottom:4px;
+}
+.potential-card.active .potential-input{color:var(--ink)}
+.potential-arrow{
+  color:var(--brand);font-size:16px;line-height:1;
+  margin:2px 0;
+}
+.potential-range{
+  font-size:22px;font-weight:500;
+  color:var(--brand);
+  letter-spacing:-.01em;
+  margin-top:2px;
+}
+.potential-card.empty .potential-range{
+  font-size:13px;font-weight:400;color:var(--muted);
+}
+.potential-sub{
+  font-family:'Geist Mono',monospace;font-size:10px;
+  letter-spacing:.15em;text-transform:uppercase;
+  color:var(--muted);margin-top:4px;
+}
+.tier-label{
+  font-family:'Geist Mono',monospace;font-size:10px;
+  letter-spacing:.25em;text-transform:uppercase;
+  color:rgba(255,255,255,.7);margin-bottom:6px;
+}
+.tier-result.empty .tier-label{color:var(--muted)}
+.tier-name{
+  font-size:22px;font-weight:500;letter-spacing:-.01em;
+  color:#fff;
+}
+.tier-result.empty .tier-name{color:var(--ink-soft)}
+.tier-range{font-size:13px;color:rgba(255,255,255,.95);margin-top:4px;font-weight:500}
+.tier-result.empty .tier-range{color:var(--muted)}
+.tier-time{font-size:11px;color:rgba(255,255,255,.75);margin-top:4px;font-family:'Geist Mono',monospace}
+.tier-criteria{
+  font-size:11.5px;color:var(--muted);line-height:1.5;
+  padding:10px 0 0;border-top:1px dashed var(--line);
+  margin-top:10px;
+}
+
+/* Objection handler */
+.obj-cat{
+  display:block;width:100%;text-align:left;
+  padding:10px 12px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius);
+  margin-bottom:6px;font-size:13px;color:var(--ink-soft);
+  transition:all .15s;
+}
+.obj-cat:hover{border-color:var(--brand);color:var(--brand)}
+.obj-cat .obj-num{
+  display:inline-block;width:18px;
+  font-family:'Geist Mono',monospace;font-size:11px;
+  color:var(--muted);
+}
+
+/* Investment preview */
+.invest-card{
+  background:var(--brand-bg);border:1px solid var(--brand-border);
+  border-radius:var(--radius-lg);padding:14px 16px;
+}
+.invest-price{
+  font-size:28px;font-weight:500;letter-spacing:-.01em;
+  color:var(--brand);margin-bottom:4px;
+}
+.invest-desc{font-size:11.5px;color:var(--ink-soft);line-height:1.5}
+
+/* ============ MODAL ============ */
+.modal-back{
+  position:fixed;inset:0;background:rgba(14,20,20,.45);
+  display:none;align-items:center;justify-content:center;z-index:100;
+  padding:40px;
+}
+.modal-back.open{display:flex}
+.modal{
+  background:var(--surface);
+  border-radius:var(--radius-lg);
+  max-width:720px;width:100%;max-height:85vh;overflow-y:auto;
+  border:1px solid var(--line);
+}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 28px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:var(--surface);z-index:1;
+}
+.modal-title{font-size:22px;font-weight:500;letter-spacing:-.015em;color:var(--ink)}
+.modal-close{
+  width:32px;height:32px;border-radius:50%;
+  border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.modal-close:hover{border-color:var(--ink)}
+.modal-body{padding:24px 28px}
+
+.obj-group{margin-bottom:26px}
+.obj-group-title{
+  font-family:'Geist Mono',monospace;font-size:11px;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--brand);margin-bottom:10px;
+}
+.obj-item{
+  background:var(--bg-alt);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:10px;
+  border-left:2px solid var(--brand-soft);
+}
+.obj-item-q{
+  font-weight:500;color:var(--ink);margin-bottom:8px;
+  font-size:14px;
+}
+.obj-item-a{font-size:13.5px;color:var(--ink-soft);line-height:1.6}
+.obj-item-a strong{color:var(--emerald)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* Responsive */
+@media (max-width:1200px){
+  .layout{grid-template-columns:220px 1fr}
+  .tools{display:none}
+}
+@media (max-width:800px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main{padding:20px}
+  .info-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img class="logo" src="../../Brand_assets/capitalquest-funding-logo.svg" alt="CapitalQuest Funding">
+    <span class="divider"></span>
+    <span class="tool">Call Wizard · v1.0</span>
+    <span class="divider"></span>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeCloser" onclick="setMode('closer')">Closer</button>
+      <button class="mode-btn" id="modeSetter" onclick="setMode('setter')">Setter</button>
+      <button class="mode-btn" id="modeSam" onclick="setMode('sam')">Sam's Script</button>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="timer" id="timer">00:00:00</div>
+    <div class="prospect-badge">Prospect: <b id="prospectDisplay">—</b></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar">
+    <div class="nav-label">Call Flow</div>
+    <ul class="nav-list" id="navList"></ul>
+
+    <div class="nav-utility">
+      <button class="util-btn" onclick="openModal('objections')">⚠ Objection Handler</button>
+      <button class="util-btn" onclick="openModal('summary')">⌂ Call Summary</button>
+      <button class="util-btn danger" onclick="resetCall()">↻ Reset Call</button>
+    </div>
+  </aside>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+
+    <div class="stage-head">
+      <h1 class="stage-title" id="stageTitle"></h1>
+      <div class="stage-meta" id="stageMeta"></div>
+    </div>
+
+    <!-- Always-visible client info strip -->
+    <section class="info-strip">
+      <div class="info-strip-head">
+        <h3>Prospect File</h3>
+      </div>
+      <div class="info-grid">
+        <div class="info-field">
+          <label>Name</label>
+          <input type="text" id="pName" placeholder="John Doe">
+        </div>
+        <div class="info-field">
+          <label>Location</label>
+          <input type="text" id="pLoc" placeholder="Miami, FL">
+        </div>
+        <div class="info-field">
+          <label>Setter / Source</label>
+          <input type="text" id="pSetter" placeholder="FB, Sarah, etc.">
+        </div>
+        <div class="info-field">
+          <label>Business Type</label>
+          <input type="text" id="pBiz" placeholder="E-commerce, real estate…">
+        </div>
+        <div class="info-field">
+          <label>Credit Score</label>
+          <input type="number" id="pScore" placeholder="740" min="300" max="850">
+        </div>
+        <div class="info-field">
+          <label>Utilization %</label>
+          <input type="number" id="pUtil" placeholder="15" min="0" max="100">
+        </div>
+        <div class="info-field">
+          <label>Funding Target</label>
+          <input type="text" id="pTarget" placeholder="$50,000+">
+        </div>
+        <div class="info-field">
+          <label>Credit Age (yrs)</label>
+          <input type="number" id="pAge" placeholder="2" min="0" step=".5">
+        </div>
+        <div class="info-field">
+          <label>Total Personal CC Limits</label>
+          <input type="number" id="pLimit" placeholder="30000" min="0" step="1000">
+        </div>
+        <div class="info-field">
+          <label># Major Bank Relationships</label>
+          <input type="number" id="pBanks" placeholder="2" min="0" max="10">
+        </div>
+      </div>
+    </section>
+
+    <!-- Dynamic stage content injected here -->
+    <div id="stageContent"></div>
+
+    <!-- Nav buttons -->
+    <div class="stage-nav">
+      <button class="btn" id="btnPrev" onclick="prevStage()">← Previous</button>
+      <button class="btn" onclick="window.appMode==='setter'?openSetterObj('s_notinterested'):openModal('objections')" style="border-color:var(--danger);color:var(--danger)">⚠ Objection</button>
+      <button class="btn-primary btn" id="btnNext" onclick="nextStage()">Next Stage →</button>
+    </div>
+
+  </main>
+
+  <!-- ============== TOOLS PANEL ============== -->
+  <aside class="tools">
+
+    <div class="tool-section">
+      <div class="tool-head">Tier Recommendation</div>
+      <div class="tier-result" id="tierResult">
+        <div class="tier-label">Awaiting Data</div>
+        <div class="tier-name">—</div>
+        <div class="tier-range">Enter prospect info</div>
+      </div>
+      <div class="tier-criteria" id="tierCriteria">Fill in credit score, utilization, and credit age above to see tier placement.</div>
+    </div>
+
+    <div class="tool-section">
+      <div class="tool-head">Funding Potential <span style="color:var(--brand);font-weight:500">· 2x–2.5x Rule</span></div>
+      <div class="potential-card empty" id="potentialCard">
+        <div class="potential-label">Personal CC Limits</div>
+        <div class="potential-input">—</div>
+        <div class="potential-arrow">↓</div>
+        <div class="potential-range" id="potentialRange">Enter total limits above</div>
+        <div class="potential-sub">Business funding potential</div>
+      </div>
+      <div class="tier-criteria">Banks lend 2–2.5x your personal limits. They need to see you handle high limits personally before trusting you on the business side.</div>
+    </div>
+
+    <div class="tool-section">
+      <div class="tool-head">Quick Objections</div>
+      <button class="obj-cat" onclick="openModal('objections','framework')" style="border-color:var(--brand);background:var(--brand-bg)"><span class="obj-num">★</span> <strong>ARP Framework</strong></button>
+      <button class="obj-cat" onclick="openModal('objections','price_early')" style="border-color:var(--danger);color:var(--danger)"><span class="obj-num">!</span> <strong>"What's your price?"</strong> (upfront)</button>
+      <button class="obj-cat" onclick="openModal('objections','uncertainty')"><span class="obj-num">01</span> Uncertainty</button>
+      <button class="obj-cat" onclick="openModal('objections','support')"><span class="obj-num">02</span> Need to check w/ someone</button>
+      <button class="obj-cat" onclick="openModal('objections','financial')"><span class="obj-num">03</span> Financial concern</button>
+      <button class="obj-cat" onclick="openModal('objections','upfront')"><span class="obj-num">04</span> "Why pay upfront?"</button>
+      <button class="obj-cat" onclick="openModal('objections','why35k')"><span class="obj-num">05</span> "Why only $35k?"</button>
+      <button class="obj-cat" onclick="openModal('objections','different')"><span class="obj-num">06</span> "What makes you different?"</button>
+      <button class="obj-cat" onclick="openModal('objections','competitor')"><span class="obj-num">07</span> "Already working with someone"</button>
+      <button class="obj-cat" onclick="openModal('objections','diy')"><span class="obj-num">08</span> "I can do it on my own"</button>
+    </div>
+
+    <div class="tool-section">
+      <div class="tool-head">Investment</div>
+      <div class="invest-card">
+        <div class="invest-price">$4,800</div>
+        <div class="invest-desc">
+          <strong>PIF</strong> · <strong>2-pay:</strong> $2,500 now + $2,500 in 30d · <strong>Back-end:</strong> $2k + 8%
+        </div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+
+<!-- ============== MODAL ============== -->
+<div class="modal-back" id="modalBack">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ========== CALL STAGES ========== */
+const STAGES = [
+  {
+    id:'intro',
+    title:'Intro & <em>Rapport</em>',
+    meta:'Stage 01 · ~1 min',
+    blocks:[
+      {
+        label:'Opening',
+        heading:'Warm open',
+        body:`<p>"Hey, is this <span class="fill" data-field="pName">Name</span>?"</p>
+<p>"Hey <span class="fill" data-field="pName">Name</span>, [Your Name] with <strong>Capital Quest Funding</strong>. How's it going? Where are you calling in from?"</p>
+<span class="direction">*20–30 sec rapport building — genuine, not rushed*</span>
+<p>"Great, saw you got scheduled on my calendar from <span class="fill" data-field="pSetter">Setter / Lead Source</span>."</p>`
+      },
+      {
+        label:'Frame',
+        heading:'Set the frame',
+        body:`<p>"What works best for these calls is getting to know you a bit, diving into your credit file from your application, and making sure we're on the same page — then going into your funding options and next steps."</p>
+<p>"This call is your opportunity to see the offers you'll qualify for. But before I do that, I need to understand <strong>exactly what your business does, your reason for funding, and what makes you a good fit</strong> — because <strong>I need to protect our lender relationships</strong> before I even consider making any introductions."</p>
+<p>"Sounds good?"</p>`
+      },
+      {
+        label:'⚠ Pre-empt',
+        heading:'If they ask price right away',
+        caution:true,
+        body:`<p>Some prospects open with "<strong>Hey, what's your price?</strong>" before you've done anything. <strong>Never quote cold.</strong> Use the ARP deflection:</p>
+<p><strong>🟢 Acknowledge:</strong> "Totally fair question — I'll absolutely get to that, promise."</p>
+<p><strong>🟡 Respond:</strong> "But before I can quote you a real number, I need to make sure I can actually help you — because if I can't, price doesn't matter. Every profile is different, and pricing depends on the funding range we can get you into. Give me a few minutes to look at your file with you, confirm what you qualify for, and then I'll give you the investment alongside the funding range."</p>
+<p><strong>🔴 Pivot:</strong> "That sound fair?"</p>
+<button class="btn" onclick="openModal('objections','price_early')" style="margin-top:8px">Full price-early play →</button>`
+      }
+    ],
+    prompts:[
+      '20–30 sec of real rapport (don\'t skip)',
+      'Reference the setter/source by name',
+      'Get a verbal "sounds good" on the frame',
+      'If price came up early — deflected with ARP, did NOT quote'
+    ]
+  },
+  {
+    id:'discovery',
+    title:'Discovery',
+    meta:'Stage 02 · 8–12 min',
+    blocks:[
+      {
+        label:'File Review',
+        heading:'Review what you know',
+        highlight:true,
+        body:`<p>"Cool — I took a minute to look at your file and the info from the soft pull on your credit profile. Looks like you have…"</p>
+<ul>
+<li><span class="fill" data-field="pScore">XXX</span> credit score</li>
+<li>Utilization around <span class="fill" data-field="pUtil">XX</span>%</li>
+<li>Total personal CC limits: <span class="fill" data-field="pLimit">$XX,XXX</span></li>
+<li>Funding target: <span class="fill" data-field="pTarget">$50k+</span></li>
+<li>Business: <span class="fill" data-field="pBiz">—</span></li>
+</ul>
+<p>"Before we dive in — is any of that not true? We've got the right file here, right?"</p>`
+      },
+      {
+        label:'★ Educate',
+        heading:'The 2x–2.5x rule',
+        highlight:true,
+        body:`<p><strong>Use this to educate the prospect and build your credibility.</strong> Most prospects have never heard this — and once they get it, they stop questioning why your service exists.</p>
+<p>"Let me share something with you that most people don't know about how this actually works."</p>
+<p>"When we credit stack, we can typically get you between <strong>2x and 2.5x your total personal credit limits</strong> in business funding. So if your total personal credit limits are <span class="fill" data-field="pLimit">$30,000</span>, we can usually pull <span class="fill" data-field="fundingLow">$60,000</span> to <span class="fill" data-field="fundingHigh">$75,000</span> in business credit."</p>
+<p>"Here's why: banks want to see that you've been <strong>responsible with high limits on the personal side</strong> before they'll trust you with business lines. Your personal profile is the proof. If you've managed $30k, $50k, $100k in personal credit without blowing it up, the banks believe you can handle the same on the business side."</p>
+<p>"This is also why — if your personal limits are low right now — <strong>step one might actually be getting your personal limits raised first</strong> before we apply for business cards. Otherwise we're leaving money on the table. That's part of what funding prep covers."</p>
+<span class="direction">*Let them process. Most prospects will ask a follow-up or say "that makes sense" — that's your green light to move forward.*</span>`
+      },
+      {
+        label:'OPEN',
+        heading:'Open the conversation',
+        body:`<p>"Cool — why don't you walk me through how you see 0% funding being a fit for you?"</p>
+<span class="direction">*Background questions — go deeper into business details and purpose of funding*</span>`
+      },
+      {
+        label:'GOALS',
+        heading:'Get to the ultimate goal',
+        body:`<p>"I know you're here for funding, but <strong>besides that</strong> — what's the ultimate goal here?"</p>
+<span class="direction">*Probe, then:*</span>
+<p>"Would you be looking for more 0% business funding after this round to scale? What does that look like?"</p>
+<p>"What would that do for your business goals exactly?"</p>`
+      },
+      {
+        label:'ESCAPE PLAN',
+        heading:'Protect them from themselves',
+        body:`<p>"We're not in the business of just getting people capital they can't pay off. <strong>What's your escape plan to pay off the cards within 12–18 months</strong>, or do you plan on doing a balance transfer?"</p>`
+      },
+      {
+        label:'TIME',
+        heading:'Why now?',
+        body:`<p>"Awesome — and why would now be the best time to get 0% funding?"</p>`
+      },
+      {
+        label:'PAIN',
+        heading:'Challenge / pain',
+        body:`<p>"Are there any challenges you're facing in business right now, besides acquiring funding?"</p>
+<p>"What are the capital-related challenges you're facing right now?"</p>
+<p>"Ok, anything else?"</p>
+<span class="direction">Widening gap: "How long has this been going on?"</span>`
+      },
+      {
+        label:'DOUBT',
+        heading:'Surface the doubt',
+        body:`<p>"What do you think has been the biggest challenge in getting this started by yourself? What's in the way?"</p>
+<p>"Just curious — have you found 0% funding to be accessible to you before? Or do you even know how to position your profile for something like that?"</p>`
+      },
+      {
+        label:'COST OF INACTION',
+        heading:'Cost of doing nothing',
+        caution:true,
+        body:`<p>"Just curious — what happens if you don't get this funding?"</p>
+<p>"How much could you <strong>make or save</strong> when you get access to funding — what's the specific monetary amount?"</p>
+<p>"Are you willing to settle for that? Are you OK with that?"</p>`
+      },
+      {
+        label:'SOLUTIONS',
+        heading:'Past attempts',
+        body:`<p>"What else have you been doing to solve this? Tried in the past?"</p>
+<p>"Do you have interest in learning how to do this <strong>yourself</strong> over and over — and get hundreds of thousands in the future without paying fees?"</p>
+<p>"What about if you went to a bank for a traditional loan — what % of interest do you think they'd offer you, or have they offered in the past?"</p>`
+      },
+      {
+        label:'Tie-Down',
+        heading:'Close discovery',
+        highlight:true,
+        body:`<p>"Cool, totally get what's going on. <strong>Anything else you feel we haven't covered yet</strong> that I'd need to know — to make sure I get you the most accurate information possible?"</p>`
+      }
+    ],
+    prompts:[
+      'Confirmed file details with prospect',
+      'Taught the 2x–2.5x rule (prospect "got it")',
+      'Got specific $ amount for cost of inaction',
+      'Escape plan is clear and realistic',
+      'Tie-down asked — no surprises coming'
+    ]
+  },
+  {
+    id:'trust',
+    title:'Trust & <em>Authority</em>',
+    meta:'Stage 03 · 2 min',
+    blocks:[
+      {
+        label:'Awareness Check',
+        heading:'Gauge familiarity',
+        body:`<p>"Have you been following us for a long time, or are we a bit newer on your radar?"</p>`
+      },
+      {
+        label:'Positioning',
+        heading:'Plant your flag',
+        highlight:true,
+        body:`<p>"Got it — so let me do this for you <span class="fill" data-field="pName">Name</span>. I'm 100% sure we can help you <strong>[their stated goal]</strong>."</p>
+<p>"Before I walk you through the process if we work together, I want to catch you up to speed on who we are and what we do:"</p>
+<ul>
+<li>Our team has funded over <strong>300+ business owners</strong></li>
+<li>In just the last 90 days we've secured our clients <strong>$30k – $100k+</strong></li>
+<li>We've tracked a <strong>97% success rate</strong> at securing $35k+ over the past few years</li>
+<li>Private relationships with <strong>10+ financial partners</strong></li>
+</ul>
+<p>"I don't want to spend too much time on us, but I think it's helpful. Any questions on our background, me, or anything like that — or are we all good?"</p>`
+      }
+    ],
+    prompts:[
+      'Asked the familiarity question',
+      'Dropped all 4 proof points',
+      'Got a "we\'re good" before moving on'
+    ]
+  },
+  {
+    id:'funding',
+    title:'Funding <em>Amount</em>',
+    meta:'Stage 04 · 2 min',
+    blocks:[
+      {
+        label:'Commitment',
+        heading:'Lock in the range',
+        highlight:true,
+        body:`<p>"OK great — based on your qualifiers and the underwriting we went through here, it looks like we're <strong>DEFINITELY</strong> going to get you between <span class="fill" data-field="tierRange">[tier range]</span> based on where we land for your first round, within <span class="fill" data-field="tierTime">[X weeks]</span>."</p>
+<p>"Cool?"</p>`
+      },
+      {
+        label:'Prep Expectations',
+        heading:'Set prep expectations',
+        body:`<p>"Here's some expectations regarding funding prep optimization…"</p>
+<span class="direction">[Notes from Lending Credit / Setter — card paydowns, authorize user, inquiry removal, etc.]</span>
+<p>"Does that make sense?"</p>`
+      }
+    ],
+    prompts:[
+      'Tier range stated with confidence',
+      'Timeline given (weeks, not months)',
+      'Prep expectations clearly laid out'
+    ]
+  },
+  {
+    id:'process',
+    title:'Process & <em>Steps</em>',
+    meta:'Stage 05 · 5 min',
+    blocks:[
+      {
+        label:'Framing',
+        heading:'Three simple steps',
+        highlight:true,
+        body:`<p>"Cool — so here's how this works. Everything we do is custom for every client."</p>
+<p>"There are really just three simple steps to not only get you access to <span class="fill" data-field="tierRange">[estimated funding]</span> in 0% interest business credit done-for-you — but also to show you how to keep doing this long-term, so you can fund yourself again and again without ever paying interest or fees."</p>
+<p><strong>"Do you have a pencil or something to take notes with?"</strong></p>`
+      },
+      {
+        label:'Step 1',
+        heading:'Funding Prep',
+        body:`<p>"<strong>STEP 1 — Funding Prep.</strong> This is where we dial in your credit profile to make you look as attractive as possible to lenders."</p>
+<p>"We understand how underwriting works at a deep level, so we'll collect your info and cross-reference it against <strong>150+ criteria</strong> banks use behind the scenes. We guide you through any tweaks or optimizations needed to paint the picture that you're low risk — so they give you the most funding possible."</p>
+<p>"Most people assume a good credit score is enough — <strong>it's not</strong>. We've seen folks with 750+ scores get denied or low-balled just because they didn't prepare properly. We make sure you avoid that."</p>
+<p>"Does it make sense? What questions do you have on Funding Prep specifically?"</p>`
+      },
+      {
+        label:'Step 2',
+        heading:'Applications',
+        body:`<p>"<strong>STEP 2 — Applications.</strong> After you're done with funding prep and optimized, we go straight into Applications — with your personal funding coach, so you don't have to guess how it's done."</p>
+<p>"This isn't about applying online randomly. We're tapping into our network of top-tier <strong>private relationship managers at Chase, AMEX, Bank of America</strong> and a dozen more banks across the US."</p>
+<p>"That means better approvals, faster outcomes, and higher limits — because we're going through the right channels, with the right people, in the right order."</p>
+<p>"And once you're in, you have <strong>lifetime access to our network</strong> — even for future rounds."</p>
+<p>"Does that make sense? What questions do you have on the application process?"</p>`
+      },
+      {
+        label:'Step 3',
+        heading:'Rinse and repeat',
+        body:`<p>"<strong>LASTLY</strong> — once you've locked in your first round, we set you up to <strong>rinse and repeat</strong>, so you can keep funding yourself anytime without ever paying interest."</p>
+<p>"What makes us different is we don't just get you the money — <strong>we teach you how to keep doing it on your own</strong>. You'll learn how to use other people's money to grow your business — the smart way — and we give you everything you need: support, tools, resources, and our lender network."</p>
+<p>"So instead of stopping at the first round, this opens the door to <strong>2–5x more funding</strong> over the next few years."</p>
+<p>"Any questions on that?"</p>`
+      },
+      {
+        label:'Delivery',
+        heading:'How it gets delivered',
+        body:`<p>"As far as how it's delivered — we'll knock out the done-for-you setup over a few quick <strong>1-on-1 Zoom calls</strong>, you'll get direct email access to your personal funding coach, and full access to our education platform with video modules and resources."</p>`
+      }
+    ],
+    prompts:[
+      'Asked them to grab a pencil',
+      'Got a question/acknowledgment after each step',
+      'Delivery expectations clear'
+    ]
+  },
+  {
+    id:'tempcheck',
+    title:'Temperature <em>Check</em>',
+    meta:'Stage 06 · 1 min',
+    blocks:[
+      {
+        label:'Feel Check',
+        heading:'Get the temp read',
+        highlight:true,
+        body:`<p>"<strong>Investment aside</strong> — how do you feel about this process?"</p>
+<span class="direction">If they respond "feeling good":</span>
+<p>"Feeling good? <strong>Or do you feel like this is exactly what you need?</strong>"</p>
+<p>→ If answer is "it's just the price" / anything but total certainty, you're NOT ready to pitch investment yet. Circle back on what's missing.</p>`
+      },
+      {
+        label:'Transition',
+        heading:'Transition to price',
+        body:`<p>If they didn't ask for price:</p>
+<p>"Cool — ready for next steps?"</p>
+<p><span class="pause">WAIT FOR YES</span></p>
+<p>"Awesome — so I handle all the enrollment, takes just a few minutes. You'd process the investment with me, then we'd schedule your first onboarding launch call, and that gets sent over to my team to start working on your account. Make sense?"</p>
+<p><span class="pause">WAIT FOR YES</span></p>
+<p>"Cool if I share the investment?"</p>`
+      }
+    ],
+    prompts:[
+      'Got a DEFINITIVE "this is what I need"',
+      'Did NOT pitch price before getting certainty',
+      'Got permission to share investment'
+    ]
+  },
+  {
+    id:'investment',
+    title:'The <em>Investment</em>',
+    meta:'Stage 07 · 1 min',
+    blocks:[
+      {
+        label:'The Ask',
+        heading:'Present the price',
+        highlight:true,
+        body:`<p>"Yeah — so the investment to get you between <span class="fill" data-field="tierRange">$xyz to $xyz</span> in 0% interest funding so you can <strong>[accomplish their goal]</strong> is just <strong>$4,800</strong>."</p>
+<p><span class="pause">BE QUIET</span> — do not speak first.</p>`
+      },
+      {
+        label:'Terms',
+        heading:'Terms to close NOW',
+        body:`<ul>
+<li><strong>PIF</strong> — pay in full</li>
+<li><strong>2-Pay Plan</strong> — $2,500 now, $2,500 in 30 days</li>
+<li><strong>Absolute worst case: Back-end %</strong> — $2k upfront + 8% on the back-end after funding (the $2k goes toward the %)</li>
+</ul>`
+      }
+    ],
+    prompts:[
+      'Price delivered cleanly, no apology',
+      'Went silent after the number',
+      'Did not offer payment plan unprompted'
+    ]
+  },
+  {
+    id:'objections',
+    title:'Objection <em>Handling</em>',
+    meta:'Stage 08 · as needed',
+    blocks:[
+      {
+        label:'The Framework',
+        heading:'Acknowledge · Respond · Pivot',
+        highlight:true,
+        body:`<p>Every objection gets handled the same way. Memorize the pattern:</p>
+<ul>
+<li><strong>🟢 ACKNOWLEDGE</strong> — "Totally get that." / "No issue at all." / "Fair question." Never argue, never "but."</li>
+<li><strong>🟡 RESPOND</strong> — Reframe or educate in 2–3 sentences max. Don't dump the pitch.</li>
+<li><strong>🔴 PIVOT</strong> — End on a <strong>question</strong> that forces a decision or surfaces the real concern. If you don't pivot, you didn't handle it — you just talked.</li>
+</ul>
+<p><em>Example pivot questions:</em> "Does that make sense?" · "If I could handle that, would you move forward right now?" · "So money aside, you're 100% in?"</p>`
+      },
+      {
+        label:'Three Groups',
+        heading:'Classify before you respond',
+        body:`<ul>
+<li><strong>Uncertainty</strong> — anything less than 100% certainty that now is the right time. <em>These are the real objections.</em></li>
+<li><strong>Support</strong> — "need to check with someone else"</li>
+<li><strong>Financial</strong> — "I literally cannot make this work" (not "too much")</li>
+</ul>
+<p><strong>Always handle uncertainty first.</strong> Pace every objection with:</p>
+<p>"No problem. Before we get into any of that — how do you feel? You mentioned you want to <strong>[their goal]</strong>. Do you 100% feel like this is what you need to get there, and that this is 100% going to work?"</p>
+<span class="direction">Command honesty. If wishy-washy, double down.</span>`
+      },
+      {
+        label:'Tool',
+        heading:'Full objection library',
+        body:`<p>Click below (or the sidebar) to open the full ARP-tagged objection library — sleep-on-it, money, partner, and the "$0 down" rebuttal.</p>
+<button class="btn btn-gold" onclick="openModal('objections')" style="margin-top:10px">Open Objection Handler</button>`
+      }
+    ],
+    prompts:[
+      'Identified which of the 3 groups it is',
+      'Acknowledged BEFORE responding',
+      'Pivoted with a question (not a statement)',
+      'Handled uncertainty FIRST',
+      'Got a definitive answer before moving on'
+    ]
+  },
+  {
+    id:'close',
+    title:'Close & <em>Enroll</em>',
+    meta:'Stage 09 · 3 min',
+    blocks:[
+      {
+        label:'Enrollment',
+        heading:'Process the investment',
+        highlight:true,
+        body:`<p>"Perfect — let me get you enrolled. Takes just a few minutes."</p>
+<ul>
+<li>Confirm payment method + terms chosen</li>
+<li>Process payment on the call</li>
+<li>Schedule onboarding launch call (within 48 hrs)</li>
+<li>Send welcome email + platform access</li>
+<li>Hand off to team / funding coach</li>
+</ul>`
+      },
+      {
+        label:'Post-Close',
+        heading:'Lock in the relationship',
+        body:`<p>"Congrats <span class="fill" data-field="pName">Name</span> — you made the right call. My team will be reaching out within 24 hours. In the meantime, check your inbox for the welcome email and onboarding details."</p>
+<p>"Anything come to mind before we wrap?"</p>`
+      }
+    ],
+    prompts:[
+      'Payment processed on the call',
+      'Onboarding call scheduled',
+      'Welcome email confirmed received',
+      'Client handed off cleanly'
+    ]
+  }
+];
+
+/* ========== OBJECTION LIBRARY ========== */
+/*
+  FRAMEWORK: Every objection response follows Acknowledge → Respond → Pivot
+  • ACKNOWLEDGE — validate what they said, lower their guard, don't argue
+  • RESPOND — reframe, educate, or redirect to the real issue
+  • PIVOT — move them to a commitment, next question, or logistics
+*/
+const OBJECTIONS = {
+  framework:{
+    title:'Framework — Acknowledge · Respond · Pivot',
+    groups:[
+      {
+        title:'The ARP Pattern',
+        items:[
+          {
+            q:'Why ARP works',
+            a:'Every objection has two layers — the <strong>surface complaint</strong> and the <strong>real concern</strong> underneath. Closers who argue hit the surface and lose. Closers who ARP lower the defenses, redirect the conversation, and get to the real issue fast.'
+          },
+          {
+            q:'🟢 ACKNOWLEDGE',
+            a:'Validate without agreeing. Make them feel heard, drop the tension.<br>• "Totally get that."<br>• "Yeah, that makes sense."<br>• "No issue at all."<br>• "I hear you — that\'s a fair concern."<br><br><strong>Never say:</strong> "But…" "However…" "Actually…" (these erase the acknowledgement)'
+          },
+          {
+            q:'🟡 RESPOND',
+            a:'Reframe the concern, share the real angle, or educate. Keep it short — 2–3 sentences max. Don\'t dump the full pitch.<br>• Reframe: "Most people think X, but what actually moves the needle is Y…"<br>• Educate: "Here\'s what\'s really happening behind the scenes…"<br>• Redirect: "Before we get into that, I want to make sure…"'
+          },
+          {
+            q:'🔴 PIVOT',
+            a:'Land on a <strong>question</strong> that advances the close. Never end on your own statement — always hand the ball back with a question that forces a decision or reveals the real objection.<br>• "Does that make sense?"<br>• "If I could [handle that concern], would you move forward right now?"<br>• "So money aside — you\'re 100% in?"<br>• "What would be the reason, if any, you wouldn\'t do this today?"'
+          },
+          {
+            q:'The rule of the pivot',
+            a:'<strong>If you don\'t pivot to a question, you didn\'t handle the objection — you just talked.</strong> The pivot is what separates a closer from a pitcher.'
+          }
+        ]
+      }
+    ]
+  },
+  uncertainty:{
+    title:'Uncertainty — "I need to think about it"',
+    groups:[
+      {
+        title:'Pace the Objection · ARP',
+        items:[
+          {
+            q:'Prospect: "I really like this, I just don\'t make decisions on the first call."',
+            a:'<strong>🟢 Acknowledge:</strong> "No issue at all, I\'m all good with you sleeping on it."<br><br><strong>🟡 Respond:</strong> "What I\'ve noticed is the people who win with this are the ones who trust their gut when it\'s a clear fit."<br><br><strong>🔴 Pivot:</strong> "So to clarify — if we schedule a time to talk tomorrow, and you wake up feeling the same way you feel right now, then we\'re 100% moving forward and processing investment?"'
+          },
+          {
+            q:'If they get wishy-washy:',
+            a:'<strong>🟢 Acknowledge:</strong> "Got it."<br><br><strong>🟡 Respond:</strong> "What I\'m really trying to understand…"<br><br><strong>🔴 Pivot:</strong> "Do you think this will 100% work, and you want to do it?"<br><br><em>Only two outcomes if done right:</em> they give you the real concern, OR they confirm 100% and you close.'
+          }
+        ]
+      }
+    ]
+  },
+  support:{
+    title:'Support — "Need to check with partner/spouse"',
+    groups:[
+      {
+        title:'Isolate the Decision · ARP',
+        items:[
+          {
+            q:'Prospect: "Can you send this over? I need to sync with my partner."',
+            a:'<strong>🟢 Acknowledge:</strong> "No problem."<br><br><strong>🟡 Respond:</strong> "Just so I\'m clear — how do you feel? For you personally, do you feel this is what you need to get to <strong>[their goal]</strong>?"<br><br><strong>🔴 Pivot:</strong> "If it was solely your decision, you\'d be processing the investment and 100% moving forward right now?"'
+          },
+          {
+            q:'After they confirm they\'re personally in:',
+            a:'<strong>🟢 Acknowledge:</strong> "Perfect."<br><br><strong>🟡 Respond:</strong> "Now I want to understand the dynamic…"<br><br><strong>🔴 Pivot:</strong> "Is this something where you\'ve made the decision and you\'re just letting them know, or will you need to get them bought in?"'
+          },
+          {
+            q:'Probe the partner dynamic:',
+            a:'• What do you think they\'ll think?<br>• What will they say about the price?<br>• What would be the reason, if anything, they\'d push back?<br><br><strong>Three things to identify:</strong><br><strong>1.</strong> Is it "let them know" or real collaboration?<br><strong>2.</strong> Any landmines with the partner?<br><strong>3.</strong> Do you trust this guy to sell his partner, or do you need to bring the partner on a second call?'
+          }
+        ]
+      }
+    ]
+  },
+  financial:{
+    title:'Financial — "I can\'t make this work"',
+    groups:[
+      {
+        title:'Isolate Money · ARP',
+        items:[
+          {
+            q:'Prospect: "I want to do this — it\'s just how I come up with the money."',
+            a:'<strong>🟢 Acknowledge:</strong> "Totally hear that."<br><br><strong>🟡 Respond:</strong> "Before we figure out the how, I want to make sure the what is locked in."<br><br><strong>🔴 Pivot:</strong> "So money aside — you\'re 100% in?" <span style="color:var(--emerald)"><strong>[Must get YES]</strong></span>'
+          },
+          {
+            q:'Open the financial conversation:',
+            a:'<strong>🟢 Acknowledge:</strong> "Got it."<br><br><strong>🟡 Respond:</strong> "Most of our clients do it as a one-time upfront. But for certain clients, depending on the situation, we break it up."<br><br><strong>🔴 Pivot:</strong> "Are you open to having an honest conversation financially — getting everything on the table — so we can see IF there\'s a way to make this work now, or at least work toward it in the future? Sounds good?"'
+          },
+          {
+            q:'Financial discovery questions:',
+            a:'• What\'s net incoming cash in the next 30 days?<br>• What\'s your cash on hand right now?<br>• What about credit?<br>• And you really want to do this, right?'
+          },
+          {
+            q:'The half-down close:',
+            a:'<strong>🟢 Acknowledge:</strong> "Look — I don\'t think the best thing for you is to do it all upfront if that\'s going to zero you out."<br><br><strong>🟡 Respond:</strong> "But I also don\'t think the best thing is to do nothing. If I was willing to let you come in for half down — so you could [future-pace results] — and by the time the next payment hits 30 days later it\'s almost an afterthought…"<br><br><strong>🔴 Pivot:</strong> "…if I was willing to do that for you, will you move forward right now?"'
+          }
+        ]
+      }
+    ]
+  },
+  price_early:{
+    title:'"What\'s your price?" — asked upfront',
+    groups:[
+      {
+        title:'Defer Until You Can Help · ARP',
+        items:[
+          {
+            q:'The core principle',
+            a:'<strong>Never quote price before you know you can help.</strong> If you quote without discovery, you\'re selling a number instead of a result — and the price always sounds high without context. Your job is to move them past price, into their situation, and back to price only when you\'ve earned the right to charge.'
+          },
+          {
+            q:'Prospect (right off the bat): "Hey, what\'s your price?"',
+            a:'<strong>🟢 Acknowledge:</strong> "Totally fair question — I\'ll absolutely get to that, promise."<br><br><strong>🟡 Respond:</strong> "But before I can quote you a real number, I need to make sure I can actually help you — because if I can\'t, price doesn\'t matter. Every profile is different, and pricing depends on the funding range we can get you into. What I do is take a few minutes to look at your file with you, confirm what you qualify for, and then I\'ll give you the investment alongside the funding range you\'re looking at."<br><br><strong>🔴 Pivot:</strong> "That sound fair?"'
+          },
+          {
+            q:'If they push back: "Just give me a ballpark"',
+            a:'<strong>🟢 Acknowledge:</strong> "I hear you — I don\'t want to waste your time either."<br><br><strong>🟡 Respond:</strong> "Here\'s the thing though — if I throw out a ballpark without knowing your profile, one of two things happens: I lowball you and you walk away thinking we\'re cheap because the funding is small, or I overshoot and you walk away thinking we\'re expensive for no reason. Neither helps you. Give me 5 minutes to see what you actually qualify for, and I promise if it\'s not a fit I\'ll tell you straight up."<br><br><strong>🔴 Pivot:</strong> "Fair trade?"'
+          },
+          {
+            q:'If they push again (third time): quote the range',
+            a:'<strong>🟢 Acknowledge:</strong> "Alright, totally get it — you just want a range."<br><br><strong>🟡 Respond:</strong> "Our investment runs between a few grand and just under five, depending on the tier you land in. The reason I don\'t want to drop a number cold is because for some people that\'s a no-brainer, and for others it\'s not the right fit — and I won\'t know which one you are until we look at your file."<br><br><strong>🔴 Pivot:</strong> "Does that give you enough to keep going, or do you want me to stop here?"<br><br><em>Note: 3rd-time pushers are often price-shoppers or broke. Quote the range, then qualify hard on discovery.</em>'
+          },
+          {
+            q:'The re-frame — shift price to value',
+            a:'"The question isn\'t really what our price is — it\'s whether what we do is worth it for your situation. If I can get you $60k in 0% funding and you\'d pay 25% APR on that anywhere else, that\'s <strong>$15k saved in year one alone</strong> — so the math makes itself. But only if you\'re the right fit. Let\'s see if you are first, cool?"'
+          }
+        ]
+      }
+    ]
+  },
+  upfront:{
+    title:'"Why pay upfront? Other companies do $0 down"',
+    groups:[
+      {
+        title:'Educate & Reframe · ARP',
+        items:[
+          {
+            q:'The full ARP rebuttal',
+            a:'<strong>🟢 Acknowledge:</strong> "Yeah, fair question — a lot of people ask that."<br><br><strong>🟡 Respond:</strong> "The reason we don\'t do $0 down is because the companies that do are back-end-only — they\'re shot-gunners. <strong>Fund and Grow</strong> for example, day 1 they apply to literally everything and screw your credit profile. That\'s the recipe for low limits. You\'ll get <strong>$10–12k total</strong> instead of $50–100k. We optimize your funding profile, get you a fundable LLC, and introduce you to our relationship managers. If you want the cheaper option, you\'ll get cheaper results."<br><br><strong>🔴 Pivot:</strong> "Does that make sense — why that approach actually costs you more in the end?"'
+          },
+          {
+            q:'Reason 1 — 1/3 of the funding limits',
+            a:'"100% performance + zero upfront = about <strong>one-third of the funding limits</strong> compared to what we can secure."'
+          },
+          {
+            q:'Reason 2 — Back-end-only destroys your profile',
+            a:'"They don\'t optimize. They shot-gun applications day 1 and burn your credit. Low limits, no future rounds."'
+          },
+          {
+            q:'Reason 3 — We do it right',
+            a:'"We optimize your funding profile, get you a fundable LLC, and introduce you to relationship managers. Cheaper option = cheaper results."'
+          }
+        ]
+      }
+    ]
+  },
+  different:{
+    title:'"What makes you different?" — Differentiation Question',
+    groups:[
+      {
+        title:'Own the Answer · ARP',
+        items:[
+          {
+            q:'The core answer',
+            a:'Most funding companies drop money in your lap and disappear. We don\'t just get you the capital — <strong>we teach you how to keep doing it on your own.</strong> You\'ll learn how to use other people\'s money to grow your business the right way, and we give you everything to keep going: support, tools, resources, and our lender network.'
+          },
+          {
+            q:'Prospect: "What makes you different from other funding companies?"',
+            a:'<strong>🟢 Acknowledge:</strong> "That\'s one of the best questions you can ask — and I\'m glad you did."<br><br><strong>🟡 Respond:</strong> "Three things set us apart. One — we pre-qualify before we pitch, so if we\'re talking, it\'s because we\'re confident we can get you funded. Two — we\'ve tracked a 97% success rate at securing $35k+ over the past few years across 300+ business owners. Three — we don\'t just get you the money and leave. We show you how to keep accessing capital on your own, long term, without paying interest or fees."<br><br><strong>🔴 Pivot:</strong> "Is that the kind of relationship you\'ve been looking for — or have the other companies you\'ve talked to been more transactional?"'
+          },
+          {
+            q:'Prospect: "I\'ve seen other companies offer the same thing"',
+            a:'<strong>🟢 Acknowledge:</strong> "Yeah, there\'s a lot of noise out there — totally fair."<br><br><strong>🟡 Respond:</strong> "The difference usually shows up in the execution. A lot of companies shotgun applications on day one, burn your credit, and you end up with low limits and no path to a second round. We optimize your profile first — fundable LLC, credit positioning, lender relationships — so round one is the foundation for everything after."<br><br><strong>🔴 Pivot:</strong> "Have you already gone through a process like that before, or is this your first time looking into business credit funding?"'
+          },
+          {
+            q:'Prospect: "Why should I trust you?"',
+            a:'<strong>🟢 Acknowledge:</strong> "I wouldn\'t trust anyone you just met either — that\'s the right instinct."<br><br><strong>🟡 Respond:</strong> "Here\'s what I\'d say: we don\'t take everyone. If your profile doesn\'t qualify, we tell you straight — because a failed funding hurts us too. The fact that we\'re still talking means we\'ve already looked at your numbers and believe we can deliver."<br><br><strong>🔴 Pivot:</strong> "What would it take for you to feel confident enough to move forward — is it more about the process, the results, or something else?"'
+          }
+        ]
+      }
+    ]
+  },
+  competitor:{
+    title:'"I\'m already working with someone else"',
+    groups:[
+      {
+        title:'The Grocery Store Reframe · ARP',
+        items:[
+          {
+            q:'The core principle',
+            a:'They\'re not off the market — they\'re just not exclusive. Your job is to earn the right to be compared, not to tear down the competitor. Validate the relationship, then open the door with a reframe they can\'t argue with.'
+          },
+          {
+            q:'Prospect: "I\'m already working with another company"',
+            a:'<strong>🟢 Acknowledge:</strong> "That\'s great — honestly, that tells me you\'re already serious about this, which is exactly the kind of person we work best with."<br><br><strong>🟡 Respond:</strong> "Here\'s something to think about though — when you go grocery shopping, you don\'t just walk into the first store you see and buy everything there. You\'re always looking for the best products, the best prices, the best deals. You shop around because it\'s your money. This is your biggest financial investment — doesn\'t it deserve the same approach?"<br><br><strong>🔴 Pivot:</strong> "All I\'m asking for is 10 minutes to show you what we bring to the table. If what they\'re offering is genuinely better, I\'ll tell you that myself. Fair enough?"'
+          },
+          {
+            q:'If they say "I\'m happy with them"',
+            a:'<strong>🟢 Acknowledge:</strong> "I\'m glad to hear that — happy clients are the best sign."<br><br><strong>🟡 Respond:</strong> "The question isn\'t whether they\'re good. The question is whether you\'re leaving money on the table by not knowing what else is out there. We\'ve had clients come to us after another company and get 30–40% more in funding just because of how we structure and optimize the profile."<br><br><strong>🔴 Pivot:</strong> "Would it be worth a quick comparison — just so you know for certain you\'re getting the best deal possible?"'
+          },
+          {
+            q:'If they\'re locked into a contract',
+            a:'<strong>🟢 Acknowledge:</strong> "Totally understand — contracts are contracts."<br><br><strong>🟡 Respond:</strong> "Here\'s what I\'d suggest: let\'s have the conversation now so you know exactly what\'s available. When that contract wraps up, you\'ll already have a clear picture of what round two looks like with us — and you won\'t be starting from zero."<br><br><strong>🔴 Pivot:</strong> "When does your current engagement end?"'
+          }
+        ]
+      }
+    ]
+  },
+  diy:{
+    title:'"I can do this on my own"',
+    groups:[
+      {
+        title:'The Puzzle Reframe · ARP',
+        items:[
+          {
+            q:'The core truth',
+            a:'They\'re right — they technically can. But "can apply" and "getting the best outcome" are completely different things. Your edge is the relationships, the optimization, and the full system. A credit score is just one piece.'
+          },
+          {
+            q:'Prospect: "I can just apply for business credit myself"',
+            a:'<strong>🟢 Acknowledge:</strong> "You\'re right — you absolutely can. And honestly, if all it took was a 700+ credit score and filling out some applications, we wouldn\'t have a business."<br><br><strong>🟡 Respond:</strong> "Here\'s the reality: most people who go at it alone end up with low limits — because a good credit score is just one piece of the puzzle. We bring the relationships with the right banks, we optimize your full credit profile, and we make sure every piece fits together the right way. Having a 700+ score is not enough on its own. You cannot complete the entire puzzle with just one piece — you need all the pieces to fit right. That\'s exactly what we do."<br><br><strong>🔴 Pivot:</strong> "If going alone meant leaving $30k, $40k, even $50k on the table — would that still be worth it to you?"'
+          },
+          {
+            q:'If they push: "I\'ve done it before"',
+            a:'<strong>🟢 Acknowledge:</strong> "That\'s actually great — it means you already understand the space."<br><br><strong>🟡 Respond:</strong> "The difference is what you got versus what was available. Most self-applicants get approved but leave a significant amount on the table because they don\'t know which banks to hit, in what order, or how to position the profile beforehand. We\'ve seen clients who did it themselves get $20k — then come to us and get $75k on round two with the same credit profile, just optimized correctly."<br><br><strong>🔴 Pivot:</strong> "What did you end up getting when you did it on your own?"'
+          }
+        ]
+      }
+    ]
+  },
+  why35k:{
+    title:'"Why only $35k?" — Ceiling Question',
+    groups:[
+      {
+        title:'Reframe the Floor · ARP',
+        items:[
+          {
+            q:'What $35k actually means',
+            a:'$35k is the <strong>tracked floor</strong> — the baseline we\'ve confirmed across qualifying profiles over the past few years. It\'s the number we can say with near-certainty. Most clients land well above it. The 97% is conservative by design — it\'s not a ceiling, it\'s a guarantee.'
+          },
+          {
+            q:'Prospect: "Why isn\'t it higher — like $100k?"',
+            a:'<strong>🟢 Acknowledge:</strong> "That\'s a fair question — and honestly, I\'d rather you ask that than not."<br><br><strong>🟡 Respond:</strong> "The $35k is the floor we track because it holds across a wide range of profiles. Most of our clients land well above that. Based on what we\'re seeing with your profile, you\'re actually on track for <strong>[their tier range]</strong> — so that number is specific to you."<br><br><strong>🔴 Pivot:</strong> "Does [their tier range] feel like it moves the needle for what you\'re trying to accomplish?"'
+          },
+          {
+            q:'Prospect: "I need at least $100k–$150k"',
+            a:'<strong>🟢 Acknowledge:</strong> "Totally hear that — you\'re thinking bigger, which is exactly the right mindset."<br><br><strong>🟡 Respond:</strong> "Here\'s what most people don\'t realize: round one isn\'t the ceiling — it\'s the foundation. Clients who play it right come back for round two with higher limits, stronger lender relationships, and stack it. We\'ve had clients go from $50k to $200k+ across rounds."<br><br><strong>🔴 Pivot:</strong> "Would getting [their tier range] in the next 2–6 weeks be enough to get you moving — while we position you for a bigger round two?"'
+          },
+          {
+            q:'The stat itself — if they question the 97%',
+            a:'<strong>🟢 Acknowledge:</strong> "Yeah — it sounds almost too good, I get it."<br><br><strong>🟡 Respond:</strong> "The reason that number holds is because we don\'t take everyone. We pre-qualify before we ever pitch. If the profile doesn\'t meet the threshold, we tell you upfront. We\'re not in the business of setting people up to fail — that\'s a bad look for everyone."<br><br><strong>🔴 Pivot:</strong> "Based on your numbers today, you\'re in the zone — so you\'d be one of the 97%, not the 3%. Does that give you more confidence moving forward?"'
+          }
+        ]
+      }
+    ]
+  }
+};
+
+/* ========== TIER LOGIC ========== */
+const TIERS = [
+  {name:'Platinum 1.0',range:'$80k – $100k+',time:'2–4 weeks',criteria:'Perfect credit 740+, 2+ yr age, 3+ major banks, util <10–15%'},
+  {name:'Platinum 2.0',range:'$60k – $80k',time:'2–4 weeks',criteria:'720+, 2+ yr age, 3+ major banks, util <25%, 1 inquiry removal'},
+  {name:'Gold',range:'$40k – $60k',time:'3–6 weeks',criteria:'720+, 1.5+ yr age, 1 major bank, util <30%, AU, paydowns or inq removal'},
+  {name:'Silver',range:'$30k – $40k',time:'3–6+ months',criteria:'720+, 1.5+ yr age, 1 major bank, util <30%, AU, paydowns/inq removal'},
+  {name:'Bronze',range:'$20k – $30k',time:'3–6+ months',criteria:'720+, 1+ yr age, no bank rel., AU required, paydowns, credit repair'},
+  {name:'Below Tier',range:'Credit repair first',time:'6+ months',criteria:'Recommend credit repair program before funding pursuit'}
+];
+
+function calcTier(){
+  const score = parseInt(document.getElementById('pScore').value) || 0;
+  const util = parseInt(document.getElementById('pUtil').value);
+  const age = parseFloat(document.getElementById('pAge').value) || 0;
+  let t = null;
+  if(score >= 740 && (isNaN(util)||util<=15) && age>=2) t = TIERS[0];
+  else if(score >= 720 && (isNaN(util)||util<=25) && age>=2) t = TIERS[1];
+  else if(score >= 720 && (isNaN(util)||util<=30) && age>=1.5) t = TIERS[2];
+  else if(score >= 720 && (isNaN(util)||util<=30) && age>=1.5) t = TIERS[3];
+  else if(score >= 720 && age>=1) t = TIERS[4];
+  else if(score>0) t = TIERS[5];
+  const box = document.getElementById('tierResult');
+  const crit = document.getElementById('tierCriteria');
+  if(!t){
+    box.classList.add('empty');
+    box.innerHTML = `<div class="tier-label">Awaiting Data</div><div class="tier-name">—</div><div class="tier-range">Enter prospect info</div>`;
+    crit.textContent = 'Fill in credit score, utilization, and credit age above to see tier placement.';
+    window.currentTier = null;
+  } else {
+    box.classList.remove('empty');
+    box.innerHTML = `<div class="tier-label">Tier Placement</div><div class="tier-name">${t.name}</div><div class="tier-range">${t.range}</div><div class="tier-time">${t.time}</div>`;
+    crit.textContent = t.criteria;
+    window.currentTier = t;
+  }
+}
+
+function calcPotential(){
+  const limit = parseFloat(document.getElementById('pLimit').value) || 0;
+  const card = document.getElementById('potentialCard');
+  const input = card.querySelector('.potential-input');
+  const range = document.getElementById('potentialRange');
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+  if(limit <= 0){
+    card.classList.remove('active');
+    card.classList.add('empty');
+    input.textContent = '—';
+    range.textContent = 'Enter total limits above';
+  } else {
+    card.classList.add('active');
+    card.classList.remove('empty');
+    input.textContent = fmt(limit);
+    range.textContent = `${fmt(limit*2)} – ${fmt(limit*2.5)}`;
+  }
+}
+
+/* ========== STATE ========== */
+let current = 0;
+const completed = new Set();
+const notes = {};
+const promptChecks = {};
+
+/* ========== RENDER ========== */
+function renderNav(){
+  const list = document.getElementById('navList');
+  list.innerHTML = STAGES.map((s,i)=>`
+    <li class="nav-item ${i===current?'active':''} ${completed.has(i)?'done':''}" onclick="goto(${i})">
+      <span class="idx">0${i+1}</span>
+      <span>${s.title.replace(/<\/?em>/g,'')}</span>
+      <span class="check">${completed.has(i)?'✓':''}</span>
+    </li>
+  `).join('');
+}
+
+function fillTokens(html){
+  const pLimit = parseFloat(document.getElementById('pLimit').value) || 0;
+  const fmt = n => n ? '$' + Math.round(n).toLocaleString() : '';
+  const fields = {
+    pName: document.getElementById('pName').value.trim(),
+    pLoc: document.getElementById('pLoc').value.trim(),
+    pSetter: document.getElementById('pSetter').value.trim(),
+    pBiz: document.getElementById('pBiz').value.trim(),
+    pScore: document.getElementById('pScore').value.trim(),
+    pUtil: document.getElementById('pUtil').value.trim(),
+    pTarget: document.getElementById('pTarget').value.trim(),
+    pLimit: fmt(pLimit),
+    pBanks: document.getElementById('pBanks').value.trim(),
+    fundingLow: fmt(pLimit * 2),
+    fundingHigh: fmt(pLimit * 2.5),
+    tierRange: window.currentTier ? window.currentTier.range : '',
+    tierTime: window.currentTier ? window.currentTier.time : ''
+  };
+  return html.replace(/<span class="fill" data-field="(\w+)">([^<]+)<\/span>/g,(m,k,def)=>{
+    const v = fields[k];
+    if(v) return `<span class="fill filled" data-field="${k}">${v}</span>`;
+    return m;
+  });
+}
+
+function renderStage(i){
+  const s = STAGES[i];
+  document.getElementById('stageTitle').innerHTML = s.title;
+  document.getElementById('stageMeta').textContent = s.meta;
+  let html = '';
+  s.blocks.forEach((b,bi)=>{
+    const cls = b.caution?'script-block caution':(b.highlight?'script-block highlight':'script-block');
+    html += `<div class="${cls}">
+      <div class="script-block-head">
+        <span class="script-label">${b.label}</span>
+      </div>
+      <h2 class="script-heading">${b.heading}</h2>
+      <div class="script-body">${fillTokens(b.body)}</div>
+    </div>`;
+  });
+  if(s.prompts && s.prompts.length){
+    html += `<div class="script-block"><div class="script-block-head"><span class="script-label">Checklist</span></div><div class="prompts">`;
+    s.prompts.forEach((p,pi)=>{
+      const key = `${s.id}-${pi}`;
+      const checked = promptChecks[key]?'checked':'';
+      html += `<div class="prompt ${checked}" onclick="togglePrompt('${key}')"><div class="prompt-check">✓</div><div class="prompt-text">${p}</div></div>`;
+    });
+    html += `</div></div>`;
+  }
+  // Notes
+  html += `<div class="notes-block">
+    <label>Notes — ${s.title.replace(/<\/?em>/g,'')}</label>
+    <textarea oninput="notes['${s.id}']=this.value" placeholder="Quotes, reactions, red flags, key phrases to repeat back…">${notes[s.id]||''}</textarea>
+  </div>`;
+  document.getElementById('stageContent').innerHTML = html;
+  document.getElementById('btnPrev').disabled = i===0;
+  document.getElementById('btnPrev').style.opacity = i===0?'.4':'1';
+  document.getElementById('btnNext').textContent = i===STAGES.length-1?'Finish Call ✓':'Next Stage →';
+  renderNav();
+}
+
+function togglePrompt(key){
+  promptChecks[key] = !promptChecks[key];
+  if(window.appMode==='setter') renderSetterStage(setterCurrent);
+  else if(window.appMode==='sam') renderSamStage(samCurrent);
+  else renderStage(current);
+}
+
+function goto(i){
+  current = i;
+  renderStage(i);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function nextStage(){
+  if(window.appMode==='setter'){
+    setterCompleted.add(setterCurrent);
+    if(setterCurrent < SETTER_STAGES.length-1){ setterCurrent++; renderSetterStage(setterCurrent); window.scrollTo({top:0,behavior:'smooth'}); }
+    else alert('Setter call complete! Prospect booked.');
+  } else if(window.appMode==='sam'){
+    samCompleted.add(samCurrent);
+    if(samCurrent < SAM_STAGES.length-1){ samCurrent++; renderSamStage(samCurrent); window.scrollTo({top:0,behavior:'smooth'}); }
+    else { downloadSummaryPDF(); openModal('summary'); }
+  } else {
+    completed.add(current);
+    if(current < STAGES.length-1){ current++; renderStage(current); window.scrollTo({top:0,behavior:'smooth'}); }
+    else { downloadSummaryPDF(); openModal('summary'); }
+  }
+}
+
+function downloadSummaryPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt',format:'letter'});
+  const name = document.getElementById('pName').value || 'Prospect';
+  const loc = document.getElementById('pLoc').value || '—';
+  const setter = document.getElementById('pSetter').value || '—';
+  const biz = document.getElementById('pBiz').value || '—';
+  const score = document.getElementById('pScore').value || '—';
+  const util = document.getElementById('pUtil').value || '—';
+  const age = document.getElementById('pAge').value || '—';
+  const limit = parseFloat(document.getElementById('pLimit').value) || 0;
+  const banks = document.getElementById('pBanks').value || '—';
+  const target = document.getElementById('pTarget').value || '—';
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+  const tier = window.currentTier ? `${window.currentTier.name} · ${window.currentTier.range}` : '—';
+  const potential = limit ? `${fmt(limit*2)} – ${fmt(limit*2.5)}` : '—';
+  const duration = document.getElementById('timer').textContent;
+
+  const W = doc.internal.pageSize.getWidth();
+  let y = 48;
+
+  // header bar
+  doc.setFillColor(11,20,22);
+  doc.rect(0,0,W,38,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.setTextColor(212,175,55);
+  doc.text('CAPITAL QUEST',36,24);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.setTextColor(199,209,213);
+  doc.text('Call Summary',36,35);
+  doc.setTextColor(120,138,144);
+  doc.text(`Duration: ${duration}`,W-36,24,{align:'right'});
+  doc.text(new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),W-36,35,{align:'right'});
+
+  y = 70;
+
+  // section: prospect info
+  const drawSection = (label) => {
+    doc.setFillColor(23,37,42);
+    doc.rect(36,y-13,W-72,18,'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8);
+    doc.setTextColor(212,175,55);
+    doc.text(label.toUpperCase(),44,y-1);
+    y += 16;
+  };
+
+  const drawRow = (label, value) => {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9);
+    doc.setTextColor(120,138,144);
+    doc.text(label,44,y);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(30,30,30);
+    doc.text(String(value),200,y);
+    y += 16;
+  };
+
+  drawSection('Prospect Info');
+  drawRow('Name', name);
+  drawRow('Location', loc);
+  drawRow('Setter / Source', setter);
+  drawRow('Business', biz);
+  y += 6;
+
+  drawSection('Credit Profile');
+  drawRow('Credit Score', score);
+  drawRow('Utilization', util !== '—' ? `${util}%` : '—');
+  drawRow('Credit Age', age !== '—' ? `${age} yrs` : '—');
+  drawRow('Bank Relationships', banks);
+  drawRow('Total CC Limits', limit ? fmt(limit) : '—');
+  y += 6;
+
+  drawSection('Funding Assessment');
+  drawRow('Funding Target', target);
+  drawRow('Funding Potential (2x–2.5x)', potential);
+  drawRow('Tier Placement', tier);
+  y += 6;
+
+  // notes
+  const stageNotes = STAGES.filter(s => notes[s.id] && notes[s.id].trim());
+  if(stageNotes.length){
+    drawSection('Notes by Stage');
+    stageNotes.forEach(s=>{
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(8);
+      doc.setTextColor(120,138,144);
+      doc.text(s.title.replace(/<\/?em>/g,'').toUpperCase(),44,y);
+      y += 13;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.setTextColor(30,30,30);
+      const lines = doc.splitTextToSize(notes[s.id],W-120);
+      lines.forEach(l=>{ doc.text(l,44,y); y+=13; });
+      y += 4;
+      if(y > doc.internal.pageSize.getHeight()-60){ doc.addPage(); y=48; }
+    });
+  }
+
+  // footer
+  const pageH = doc.internal.pageSize.getHeight();
+  doc.setFillColor(11,20,22);
+  doc.rect(0,pageH-28,W,28,'F');
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  doc.setTextColor(120,138,144);
+  doc.text('Capital Quest Funding · Confidential',36,pageH-10);
+  doc.text(`Generated ${new Date().toLocaleString()}`,W-36,pageH-10,{align:'right'});
+
+  doc.save(`CQ-Summary-${name.replace(/\s+/g,'-')}-${Date.now()}.pdf`);
+}
+
+function prevStage(){
+  if(window.appMode==='setter'){
+    if(setterCurrent>0){ setterCurrent--; renderSetterStage(setterCurrent); window.scrollTo({top:0,behavior:'smooth'}); }
+  } else if(window.appMode==='sam'){
+    if(samCurrent>0){ samCurrent--; renderSamStage(samCurrent); window.scrollTo({top:0,behavior:'smooth'}); }
+  } else {
+    if(current>0){ current--; renderStage(current); window.scrollTo({top:0,behavior:'smooth'}); }
+  }
+}
+
+/* ========== TIMER ========== */
+let startTime = Date.now();
+setInterval(()=>{
+  const elapsed = Math.floor((Date.now()-startTime)/1000);
+  const h = String(Math.floor(elapsed/3600)).padStart(2,'0');
+  const m = String(Math.floor((elapsed%3600)/60)).padStart(2,'0');
+  const s = String(elapsed%60).padStart(2,'0');
+  document.getElementById('timer').textContent = `${h}:${m}:${s}`;
+},1000);
+
+/* ========== MODAL ========== */
+function openModal(kind, category){
+  const back = document.getElementById('modalBack');
+  const title = document.getElementById('modalTitle');
+  const body = document.getElementById('modalBody');
+  if(kind==='objections'){
+    title.textContent = 'Objection Handler';
+    const cats = category ? [category] : Object.keys(OBJECTIONS);
+    let html = '';
+    cats.forEach(c=>{
+      const o = OBJECTIONS[c];
+      if(!o) return;
+      html += `<div class="obj-group"><div class="obj-group-title">${o.title}</div>`;
+      o.groups.forEach(g=>{
+        g.items.forEach(it=>{
+          html += `<div class="obj-item"><div class="obj-item-q">${it.q}</div><div class="obj-item-a">${it.a}</div></div>`;
+        });
+      });
+      html += `</div>`;
+    });
+    body.innerHTML = html;
+  } else if(kind==='summary'){
+    title.textContent = 'Call Summary';
+    const name = document.getElementById('pName').value || 'Prospect';
+    const score = document.getElementById('pScore').value || '—';
+    const target = document.getElementById('pTarget').value || '—';
+    const limit = parseFloat(document.getElementById('pLimit').value) || 0;
+    const fmt = n => '$' + Math.round(n).toLocaleString();
+    const tier = window.currentTier ? `${window.currentTier.name} · ${window.currentTier.range}` : '—';
+    const potential = limit ? `${fmt(limit*2)} – ${fmt(limit*2.5)}` : '—';
+    let html = `<div class="obj-item"><div class="obj-item-q">Prospect</div><div class="obj-item-a">${name} · Credit ${score} · Target ${target}<br>Personal Limits: ${limit?fmt(limit):'—'} → Potential: <strong>${potential}</strong><br>Tier: <strong>${tier}</strong></div></div>`;
+    html += `<div class="obj-group"><div class="obj-group-title">Notes by Stage</div>`;
+    STAGES.forEach(s=>{
+      if(notes[s.id] && notes[s.id].trim()){
+        html += `<div class="obj-item"><div class="obj-item-q">${s.title.replace(/<\/?em>/g,'')}</div><div class="obj-item-a">${notes[s.id].replace(/\n/g,'<br>')}</div></div>`;
+      }
+    });
+    html += `</div>`;
+    html += `<div style="margin-top:20px;display:flex;gap:10px"><button class="btn btn-gold" onclick="exportSummary()">Export Summary</button><button class="btn" onclick="closeModal()">Close</button></div>`;
+    body.innerHTML = html;
+  } else if(kind==='setter'){
+    title.textContent = '📞 Setter Script';
+    body.innerHTML = renderSetterScript();
+  }
+  back.classList.add('open');
+}
+
+/* ========== SETTER STAGES ========== */
+const SETTER_STAGES = [
+  {
+    id:'s_open',
+    title:'Opening',
+    meta:'Stage 01 · ~30 sec',
+    blocks:[
+      {
+        label:'Warm Opener',
+        heading:'Reference the form — they raised their hand',
+        highlight:true,
+        body:`<p>"Hey, is this <span class="fill" data-field="pName">Name</span>?"</p>
+<p><span class="direction">[They say yes]</span></p>
+<p>"Hey <span class="fill" data-field="pName">Name</span>! This is <strong>[Your Name]</strong> with Capital Quest — I'm reaching out because you filled out a form recently about business funding. I just wanted to follow up and make sure we got you taken care of. Do you have a few minutes?"</p>
+<p class="direction">They filled out the form — this is a warm call. Lead with that. It removes friction immediately and reminds them they expressed interest.</p>`
+      }
+    ],
+    prompts:['Referenced the form right away','Tone is friendly and follow-up — not salesy']
+  },
+  {
+    id:'s_hook',
+    title:'Reconnect',
+    meta:'Stage 02 · ~1 min',
+    blocks:[
+      {
+        label:'Remind & Reconnect',
+        heading:'Bring them back to why they filled it out',
+        highlight:true,
+        body:`<p>"So just to make sure I have the right person — you were looking into getting access to business funding, right?"</p>
+<p><span class="direction">[They confirm]</span></p>
+<p>"Perfect. So what we do is help business owners get <strong>$35k to $100k+ in 0% interest business credit</strong> — it's done for you, no collateral, no revenue requirements. That's what you were looking into when you filled out the form."</p>
+<p>"I just want to make sure we get you connected with the right person on our team so they can walk you through exactly what you'd qualify for."</p>`
+      }
+    ],
+    prompts:['Got them to confirm their interest','Framed the call as follow-through — not a pitch']
+  },
+  {
+    id:'s_qualify',
+    title:'Qualify',
+    meta:'Stage 03 · ~2 min',
+    blocks:[
+      {
+        label:'3 Fast Questions',
+        heading:'Pre-qualify before you pitch',
+        body:`<p>"Just a few quick ones so I don't waste your time:"</p>
+<ol style="margin:10px 0 10px 20px;line-height:2.2">
+  <li>"Do you have a business or are you working on something?"</li>
+  <li>"And your personal credit — ballpark, are we talking 680+?"</li>
+  <li>"If the numbers made sense, is capital access something you're actively looking at right now — or more down the road?"</li>
+</ol>`
+      },
+      {
+        label:'Green Light',
+        heading:'Criteria to book',
+        body:`<ul>
+<li>Has a business or idea in motion</li>
+<li>Personal credit <strong>680+</strong></li>
+<li>Open to capital now or within <strong>30–60 days</strong></li>
+</ul>
+<p>If they don't hit all three — be honest. "It sounds like the timing might not be right just yet. Can I follow up in [X weeks]?"</p>`
+      }
+    ],
+    prompts:['Asked all 3 questions','Confirmed green light before moving forward']
+  },
+  {
+    id:'s_bridge',
+    title:'Build the Appt',
+    meta:'Stage 04 · ~1 min',
+    blocks:[
+      {
+        label:'Bridge',
+        heading:'Transition to the booking',
+        highlight:true,
+        body:`<p>"OK — based on what you just told me, it sounds like this could be a real fit."</p>
+<p>"What we'd do is get you on a call with one of our senior funding advisors. They'll pull up your credit profile, walk you through exactly what you'd qualify for, and give you the full picture — no obligation, no pitch, just numbers."</p>
+<p>"The whole call is about 45 minutes. We've helped <strong>300+ business owners</strong> get funded — and we've tracked a <strong>97% success rate</strong> at securing $35k or more."</p>`
+      }
+    ],
+    prompts:['Positioned the closer call as discovery, not a pitch','Dropped the 97% stat']
+  },
+  {
+    id:'s_book',
+    title:'Set Appointment',
+    meta:'Stage 05 · ~1 min',
+    blocks:[
+      {
+        label:'Two-Choice Close',
+        heading:'Lock in the time',
+        highlight:true,
+        body:`<p>"I've got availability <strong>[Day]</strong> at <strong>[Time A]</strong> or <strong>[Time B]</strong> — which works better for you?"</p>
+<p><span class="direction">[They pick a time]</span></p>
+<p>"Perfect. I'm going to send you a confirmation to <strong>[email/number]</strong>. The call will come from our team — just pick up and they'll take it from there."</p>
+<p>"One thing — we only hold these spots for people who are serious about showing up. You good to commit to that time?"</p>`
+      }
+    ],
+    prompts:['Used two-choice close — did NOT ask "when are you free?"','Got a verbal commitment to show up']
+  },
+  {
+    id:'s_confirm',
+    title:'Confirm & Close',
+    meta:'Stage 06 · ~30 sec',
+    blocks:[
+      {
+        label:'Lock It In',
+        heading:'End clean',
+        body:`<p>"Great — you're locked in for <strong>[Day + Time]</strong>."</p>
+<p>"Between now and then, don't do anything with your credit — no new applications, no big purchases on your cards. That protects your profile going into the call."</p>
+<p>"You'll get a reminder the day before. Any questions before then, just reply to the confirmation."</p>
+<p>"Talk soon, <span class="fill" data-field="pName">Name</span> — looking forward to it."</p>`
+      }
+    ],
+    prompts:['Gave the credit hygiene instruction','Confirmed reminder is going out','Ended with prospect\'s name']
+  }
+];
+
+/* ========== SAM'S SCRIPT STAGES ========== */
+const SAM_STAGES = [
+  {
+    id:'sam_open',
+    title:'Intro & Frame',
+    meta:'Stage 01 · ~2 min',
+    blocks:[
+      {
+        label:'Warm Opener',
+        heading:'Build rapport fast',
+        highlight:true,
+        body:`<p>"Hey, is this <span class="fill" data-field="pName">Name</span>?"</p>
+<p><span class="direction">[They confirm]</span></p>
+<p>"Hey <span class="fill" data-field="pName">Name</span>! <strong>[Your Name]</strong> with Capital Quest Funding — how's it going? Where are you calling in from?"</p>
+<p><span class="direction">[Let them answer — be genuinely interested]</span></p>
+<p>"Nice! Great — saw you got scheduled on my calendar from our Facebook ads form. Awesome that you took the time to reach out."</p>`
+      },
+      {
+        label:'Set the Frame',
+        heading:'Establish control and protect your authority',
+        highlight:true,
+        body:`<p>"Awesome — so what I've seen from what works best on these calls, <span class="fill" data-field="pName">Name</span>, is to make sure we've got all our i's dotted and t's crossed."</p>
+<p>"I'm going to ask you a few questions about your credit, your business, and the information from the application you submitted with us — just to make sure we're on the same page."</p>
+<p>"This call is <strong>your opportunity to see the offers you'll qualify for.</strong>"</p>
+<p>"But before I do that, I need to understand exactly what your business does, your reason for funding, and what makes you a good fit — because I need to protect our lender relationships before I even consider making any introductions."</p>
+<p>"<strong>Sounds good?</strong>"</p>`
+      },
+      {
+        label:'If They Ask Pricing Upfront',
+        heading:'Defer price — you haven\'t earned the right yet',
+        caution:true,
+        body:`<p>"Great question — and I promise I'll get to that."</p>
+<p>"The thing is, I can't give you an honest number until I know exactly what you qualify for. Every profile is different, and the investment is tied directly to the funding range we can get you into."</p>
+<p>"What I don't want to do is throw out a number before I've actually looked at your situation — because that wouldn't be fair to you."</p>
+<p>"Give me a few minutes to go through your file with you, and I'll give you the full picture — funding range and investment together. That way it actually makes sense."</p>
+<p>"<strong>Sound good?</strong>"</p>`
+      }
+    ],
+    prompts:[
+      'Asked where they\'re calling from — actually listened',
+      'Referenced the Facebook form',
+      'Got a "sounds fair" on the frame before moving on',
+      'If pricing asked early — deferred cleanly without quoting'
+    ]
+  },
+  {
+    id:'sam_convo',
+    title:'Discovery',
+    meta:'Stage 02 · ~5 min',
+    blocks:[
+      {
+        label:'Review What You Know',
+        heading:'Show you\'ve done your homework',
+        highlight:true,
+        body:`<p>"Cool — I took a minute to look at the application you submitted with us. Looks like you have…"</p>
+<ul>
+  <li>Credit score around <strong><span class="fill" data-field="pScore">[credit score]</span></strong></li>
+  <li>Utilization around <strong><span class="fill" data-field="pUtil">[utilization]</span>%</strong></li>
+  <li>Total personal CC limits: <strong><span class="fill" data-field="pLimit">[total limits]</span></strong></li>
+  <li>Funding target: <strong><span class="fill" data-field="pTarget">[funding target]</span></strong></li>
+  <li>Business: <strong><span class="fill" data-field="pBiz">[business type]</span></strong></li>
+</ul>
+<p>"Before we dive in — does everything sound accurate?"</p>`
+      },
+      {
+        label:'Business Discovery',
+        heading:'Let them talk — listen for pain',
+        body:`<p>"Alright, cool — so tell me a little bit about your business. What do you do, and how long have you been in business for?"</p>
+<p><span class="direction">[Let them answer fully — don't interrupt. Take notes.]</span></p>`
+      },
+      {
+        label:'Capital Discovery',
+        heading:'Uncover the real funding motivation',
+        body:`<p>"Got it — and what are the capital-related challenges you're facing right now? Are you looking to start or scale your business?"</p>
+<p><span class="direction">[Let them answer. Then dig into the cost of inaction:]</span></p>
+<p>"Now, you mentioned you're looking for <span class="fill" data-field="pTarget">[funding target]</span> — once that <span class="fill" data-field="pTarget">[funding target]</span> is invested into your business, how much could you realistically make or save?"</p>
+<p><span class="direction">[Let them answer.]</span></p>
+<p>"And if you don't get that capital — how much longer does that set your business back?"</p>
+<p><span class="direction">[This is the most important question on the call. The gap between where they are and where they want to be is what you're solving. Let them sit with it.]</span></p>`
+      },
+      {
+        label:'Dig Deeper',
+        heading:'Find pain beyond funding',
+        body:`<p>"Gotcha — and are there any other challenges you're facing in your business right now, besides acquiring funding?"</p>
+<p><span class="direction">[This opens the door to deeper pain points. What they say here is what you mirror back when you present the solution.]</span></p>`
+      },
+      {
+        label:'Escape Plan',
+        heading:'Protect them from themselves',
+        body:`<p>"Cool — and the reason I asked those questions is because we're not in the business of just getting people capital they can't pay off."</p>
+<p>"What's your escape plan to pay off the cards within 12–18 months? Are you planning to use the revenue the capital generates, or do you plan on doing a balance transfer once the introductory period is up?"</p>
+<p>"I just want to make sure you have a plan before that 0% window closes — because after that, we want you in a position where it's not even a concern."</p>
+<p><span class="direction">[This isn't a gatekeeping question — it's a trust-building one. It shows you're looking out for them, not just closing them.]</span></p>`
+      },
+      {
+        label:'Past Attempts',
+        heading:'Understand what they\'ve already tried',
+        body:`<p>"Have you worked with a funding company before — or is this your first time? Have you tried applying on your own?"</p>
+<p><span class="direction">[Their answer tells you a lot. First-timers need more education. People who've been burned need trust rebuilt. People who tried DIY are already aware of the gap — lean into that.]</span></p>`
+      },
+      {
+        label:'Tie-Down',
+        heading:'Close discovery clean',
+        highlight:true,
+        body:`<p>"Cool — sounds like I have everything I need."</p>
+<p>"Anything else you feel we haven't covered yet that I'd need to know — to make sure I get you the most accurate information possible?"</p>
+<p><span class="direction">[Pause and let them speak. This is their last chance to surface anything before you pitch. Whatever they bring up here, acknowledge it and fold it into the presentation.]</span></p>`
+      }
+    ],
+    prompts:[
+      'Confirmed application info is accurate',
+      'Asked about business — let them fully answer',
+      'Identified whether they\'re starting or scaling',
+      'Uncovered at least one pain point beyond funding',
+      'Got their escape plan — revenue, balance transfer, or other',
+      'Asked about past funding attempts',
+      'Got a clean "nothing else" on the tie-down',
+      'Took notes to mirror back later'
+    ]
+  },
+  {
+    id:'sam_trust',
+    title:'Trust & Authority',
+    meta:'Stage 03 · ~2 min',
+    blocks:[
+      {
+        label:'Awareness Check',
+        heading:'Gauge familiarity',
+        highlight:true,
+        body:`<p>"Have you been following us for a long time, or are we a bit newer on your radar?"</p>
+<p><span class="direction">[Long-time follower → validate and move fast. New to you → drop the positioning before moving on.]</span></p>`
+      },
+      {
+        label:'Positioning',
+        heading:'Plant your flag — fast',
+        highlight:true,
+        body:`<p>"Got it, <span class="fill" data-field="pName">Name</span> — honestly, based on everything you just told me, I'm confident we can get you there."</p>
+<p>"Real quick on us — <strong>300+ business owners funded</strong>, <strong>$30k to $100k+</strong> secured in just the last 90 days, <strong>97% success rate</strong>, and we have private relationships with <strong>10+ financial partners</strong>. That's what puts us in a different position than anyone else you'll talk to."</p>
+<p>"Any questions on us — or are we good to get into it?"</p>`
+      }
+    ],
+    prompts:[
+      'Asked the awareness question — actually listened',
+      'Dropped all 4 proof points in one breath',
+      'Got a "we\'re good" before moving on'
+    ]
+  },
+  {
+    id:'sam_funding',
+    title:'Funding Amount',
+    meta:'Stage 04 · ~1 min',
+    blocks:[
+      {
+        label:'Commitment',
+        heading:'Lock in the range with certainty',
+        highlight:true,
+        body:`<p>"OK — based on your qualifiers and the data we have from our underwriting process and clients with profiles similar to yours, it looks like we're <strong>definitely</strong> going to get you between <span class="fill" data-field="tierRange">[tier range]</span> for your first round, within <span class="fill" data-field="tierTime">[X weeks]</span>."</p>
+<p>"That's not a maybe — that's based on what we're seeing right now."</p>
+<p>"<strong>Sound good?</strong>"</p>
+<p><span class="direction">[Say it with conviction. The word "definitely" is intentional — it removes doubt and creates certainty. If they push back on the range, go to the tier breakdown in the tools panel.]</span></p>`
+      },
+      {
+        label:'The 2x–2.5x Rule',
+        heading:'Educate — make them feel like insiders',
+        body:`<p>"Let me show you something most people don't know about how this works."</p>
+<p>"We can typically get you <strong>2x to 2.5x your total personal credit limits</strong> in business funding. So if your personal limits are <span class="fill" data-field="pLimit">$X</span>, we're looking at pulling <span class="fill" data-field="fundingLow">$X</span> to <span class="fill" data-field="fundingHigh">$X</span> in business credit."</p>
+<p>"Why? Banks need to see you've handled high limits responsibly on the personal side before they'll trust you with business lines. Your personal profile is the proof."</p>
+<p>"<span class="direction">If their limits are low:</span> This is also why step one might be getting your personal limits raised first — otherwise we're leaving money on the table. That's part of what funding prep covers."</p>`
+      }
+    ],
+    prompts:[
+      'Delivered the range with full conviction — no hedging',
+      'Got a "cool" or confirmation before moving on',
+      'Explained the 2x–2.5x rule',
+      'Addressed low limits if applicable'
+    ]
+  },
+  {
+    id:'sam_process',
+    title:'Process & Steps',
+    meta:'Stage 05 · 5 min',
+    blocks:[
+      {
+        label:'Framing',
+        heading:'Three simple steps',
+        highlight:true,
+        body:`<p>"Cool — so here's how this works. Everything we do is custom for every client."</p>
+<p>"There are really just three simple steps to not only get you access to <span class="fill" data-field="tierRange">[estimated funding]</span> in 0% interest business credit done-for-you — but also to show you how to keep doing this long-term, so you can fund yourself again and again without ever paying interest or fees."</p>
+<p><strong>"Do you have a pencil or something to take notes with?"</strong></p>`
+      },
+      {
+        label:'Step 1',
+        heading:'Funding Prep',
+        body:`<p>"<strong>STEP 1 — Funding Prep.</strong> This is where we dial in your credit profile to make you look as attractive as possible to lenders."</p>
+<p>"We understand how underwriting works at a deep level, so we'll collect your info and cross-reference it against <strong>150+ criteria</strong> banks use behind the scenes. We guide you through any tweaks or optimizations needed to paint the picture that you're low risk — so they give you the most funding possible."</p>
+<p>"Most people assume a good credit score is enough — <strong>it's not</strong>. We've seen folks with 750+ scores get denied or low-balled just because they didn't prepare properly. We make sure you avoid that."</p>
+<p>"Does it make sense? What questions do you have on Funding Prep specifically?"</p>`
+      },
+      {
+        label:'Step 2',
+        heading:'Applications',
+        body:`<p>"<strong>STEP 2 — Applications.</strong> After you're done with funding prep and optimized, we go straight into Applications — with your personal funding coach, so you don't have to guess how it's done."</p>
+<p>"This isn't about applying online randomly. We're tapping into our network of top-tier <strong>private relationship managers at Chase, AMEX, Bank of America</strong> and a dozen more banks across the US."</p>
+<p>"That means better approvals, faster outcomes, and higher limits — because we're going through the right channels, with the right people, in the right order."</p>
+<p>"And once you're in, you have <strong>lifetime access to our network</strong> — even for future rounds."</p>
+<p>"Does that make sense? What questions do you have on the application process?"</p>`
+      },
+      {
+        label:'Step 3',
+        heading:'Rinse and repeat',
+        body:`<p>"<strong>LASTLY</strong> — once you've locked in your first round, we set you up to <strong>rinse and repeat</strong>, so you can keep funding yourself anytime without ever paying interest."</p>
+<p>"What makes us different is we don't just get you the money — <strong>we teach you how to keep doing it on your own</strong>. You'll learn how to use other people's money to grow your business — the smart way — and we give you everything you need: support, tools, resources, and our lender network."</p>
+<p>"So instead of stopping at the first round, this opens the door to <strong>2–5x more funding</strong> over the next few years."</p>
+<p>"Any questions on that?"</p>`
+      },
+      {
+        label:'Delivery',
+        heading:'How it gets delivered',
+        body:`<p>"As far as how it's delivered — we'll knock out the done-for-you setup over a few quick <strong>1-on-1 Zoom calls</strong>, you'll get direct email access to your personal funding coach, and full access to our education platform with video modules and resources."</p>`
+      }
+    ],
+    prompts:[
+      'Asked them to grab a pencil',
+      'Got a question/acknowledgment after each step',
+      'Delivery expectations clear'
+    ]
+  },
+  {
+    id:'sam_tempcheck',
+    title:'Temperature Check',
+    meta:'Stage 06 · 1 min',
+    blocks:[
+      {
+        label:'Feel Check',
+        heading:'Get the temp read',
+        highlight:true,
+        body:`<p>"<strong>Investment aside</strong> — how do you feel about this process?"</p>
+<span class="direction">If they respond "feeling good":</span>
+<p>"Feeling good? <strong>Or do you feel like this is exactly what you need?</strong>"</p>
+<p>→ If answer is "it's just the price" / anything but total certainty, you're NOT ready to pitch investment yet. Circle back on what's missing.</p>`
+      },
+      {
+        label:'Transition',
+        heading:'Transition to price',
+        body:`<p>If they didn't ask for price:</p>
+<p>"Cool — ready for next steps?"</p>
+<p><span class="pause">WAIT FOR YES</span></p>
+<p>"Awesome — so I handle all the enrollment, takes just a few minutes. You'd process the investment with me, then we'd schedule your first onboarding launch call, and that gets sent over to my team to start working on your account. Make sense?"</p>
+<p><span class="pause">WAIT FOR YES</span></p>
+<p>"Cool if I share the investment?"</p>`
+      }
+    ],
+    prompts:[
+      'Got a DEFINITIVE "this is what I need"',
+      'Did NOT pitch price before getting certainty',
+      'Got permission to share investment'
+    ]
+  },
+  {
+    id:'sam_investment',
+    title:'The Investment',
+    meta:'Stage 07 · 1 min',
+    blocks:[
+      {
+        label:'The Ask',
+        heading:'Present the price',
+        highlight:true,
+        body:`<p>"Yeah — so the investment to get you between <span class="fill" data-field="tierRange">$xyz to $xyz</span> in 0% interest funding so you can <strong>[accomplish their goal]</strong> is just <strong>$4,800</strong>."</p>
+<p><span class="pause">BE QUIET</span> — do not speak first.</p>`
+      },
+      {
+        label:'Terms',
+        heading:'Terms to close NOW',
+        body:`<ul>
+<li><strong>PIF</strong> — pay in full</li>
+<li><strong>2-Pay Plan</strong> — $2,500 now, $2,500 in 30 days</li>
+<li><strong>Absolute worst case: Back-end %</strong> — $2k upfront + 8% on the back-end after funding (the $2k goes toward the %)</li>
+</ul>`
+      }
+    ],
+    prompts:[
+      'Price delivered cleanly, no apology',
+      'Went silent after the number',
+      'Did not offer payment plan unprompted'
+    ]
+  },
+  {
+    id:'sam_objections',
+    title:'Objection Handling',
+    meta:'Stage 08 · as needed',
+    blocks:[
+      {
+        label:'The Framework',
+        heading:'Acknowledge · Respond · Pivot',
+        highlight:true,
+        body:`<p>Every objection gets handled the same way. Memorize the pattern:</p>
+<ul>
+<li><strong>🟢 ACKNOWLEDGE</strong> — "Totally get that." / "No issue at all." / "Fair question." Never argue, never "but."</li>
+<li><strong>🟡 RESPOND</strong> — Reframe or educate in 2–3 sentences max. Don't dump the pitch.</li>
+<li><strong>🔴 PIVOT</strong> — End on a <strong>question</strong> that forces a decision or surfaces the real concern. If you don't pivot, you didn't handle it — you just talked.</li>
+</ul>
+<p><em>Example pivot questions:</em> "Does that make sense?" · "If I could handle that, would you move forward right now?" · "So money aside, you're 100% in?"</p>`
+      },
+      {
+        label:'Three Groups',
+        heading:'Classify before you respond',
+        body:`<ul>
+<li><strong>Uncertainty</strong> — anything less than 100% certainty that now is the right time. <em>These are the real objections.</em></li>
+<li><strong>Support</strong> — "need to check with someone else"</li>
+<li><strong>Financial</strong> — "I literally cannot make this work" (not "too much")</li>
+</ul>
+<p><strong>Always handle uncertainty first.</strong> Pace every objection with:</p>
+<p>"No problem. Before we get into any of that — how do you feel? You mentioned you want to <strong>[their goal]</strong>. Do you 100% feel like this is what you need to get there, and that this is 100% going to work?"</p>
+<span class="direction">Command honesty. If wishy-washy, double down.</span>`
+      },
+      {
+        label:'Tool',
+        heading:'Full objection library',
+        body:`<p>Click below (or the sidebar) to open the full ARP-tagged objection library — sleep-on-it, money, partner, and the "$0 down" rebuttal.</p>
+<button class="btn btn-gold" onclick="openModal('objections')" style="margin-top:10px">Open Objection Handler</button>`
+      }
+    ],
+    prompts:[
+      'Identified which of the 3 groups it is',
+      'Acknowledged BEFORE responding',
+      'Pivoted with a question (not a statement)',
+      'Handled uncertainty FIRST',
+      'Got a definitive answer before moving on'
+    ]
+  },
+  {
+    id:'sam_close',
+    title:'Close & Enroll',
+    meta:'Stage 09 · 3 min',
+    blocks:[
+      {
+        label:'Enrollment',
+        heading:'Process the investment',
+        highlight:true,
+        body:`<p>"Perfect — let me get you enrolled. Takes just a few minutes."</p>
+<ul>
+<li>Confirm payment method + terms chosen</li>
+<li>Process payment on the call</li>
+<li>Schedule onboarding launch call (within 48 hrs)</li>
+<li>Send welcome email + platform access</li>
+<li>Hand off to team / funding coach</li>
+</ul>`
+      },
+      {
+        label:'Post-Close',
+        heading:'Lock in the relationship',
+        body:`<p>"Congrats <span class="fill" data-field="pName">Name</span> — you made the right call. My team will be reaching out within 24 hours. In the meantime, check your inbox for the welcome email and onboarding details."</p>
+<p>"Anything come to mind before we wrap?"</p>`
+      }
+    ],
+    prompts:[
+      'Payment processed on the call',
+      'Onboarding call scheduled',
+      'Welcome email confirmed received',
+      'Client handed off cleanly'
+    ]
+  }
+];
+
+
+let samCurrent = 0;
+const samCompleted = new Set();
+const samNotes = {};
+
+const SETTER_OBJECTIONS = {
+  s_number:{
+    title:'"I don\'t remember filling anything out"',
+    groups:[{title:'',items:[{
+      q:'Response',
+      a:'"No worries at all — you may have seen one of our ads on Facebook and filled out a short form about business funding. Either way, I\'m not here to pitch you anything — I just want to make sure the right person follows up with you. Does business funding still sound like something you\'re looking into?"'
+    }]}]
+  },
+  s_notinterested:{
+    title:'"I\'m not interested"',
+    groups:[{title:'',items:[{
+      q:'Response',
+      a:'"No problem at all. Can I ask — is that because you already have all the capital you need, or more that the timing\'s off right now?"<br><br><em>If timing: "Got it — when would be a better time to circle back?"</em>'
+    }]}]
+  },
+  s_loan:{
+    title:'"Is this a loan?"',
+    groups:[{title:'',items:[{
+      q:'Response',
+      a:'"Not a loan — it\'s business credit. No personal guarantee, no collateral, 0% interest for the first 12–18 months. It\'s structured completely differently from traditional financing."'
+    }]}]
+  },
+  s_sendinfo:{
+    title:'"Send me information first"',
+    groups:[{title:'',items:[{
+      q:'Response',
+      a:'"Absolutely — I can do that. The thing is, what you qualify for is specific to your profile, so a generic overview won\'t give you real numbers. The call is really the only way to get accurate info. Can we lock in a time and I\'ll send the confirmation alongside an overview?"'
+    }]}]
+  },
+  s_notime:{
+    title:'"I don\'t have time right now"',
+    groups:[{title:'',items:[{
+      q:'Response',
+      a:'"Totally get it — that\'s exactly why I\'m calling ahead of time instead of just booking you. What does your schedule look like later this week or early next?"'
+    }]}]
+  },
+  s_competitor:{
+    title:'"I\'m already working with someone"',
+    groups:[{title:'',items:[{
+      q:'Response',
+      a:'"That\'s great — means you\'re serious about this. Here\'s a thought though: when you go grocery shopping, you don\'t just walk into the first store and buy everything there. You look for the best products, best prices, best deals — because it\'s your money. This is your biggest investment. Doesn\'t it deserve the same approach? All I\'m asking is for you to hop on a quick call with our advisor. If what you have is genuinely better, he\'ll tell you that himself. Worth a look?"'
+    }]}]
+  },
+  s_diy:{
+    title:'"I can do this on my own"',
+    groups:[{title:'',items:[{
+      q:'Response',
+      a:'"You\'re right — you can apply on your own. But here\'s the reality: most people who go at it alone end up with low limits, because a good credit score is just one piece of the puzzle. We bring the established bank relationships, we optimize your full credit profile, and we make sure every piece fits together the right way. Having a 700+ score is not enough on its own — you cannot complete the entire puzzle with just one piece. That\'s exactly what our advisor walks you through on the call. Worth 45 minutes to see the full picture?"'
+    }]}]
+  },
+  s_price:{
+    title:'"How much does it cost?"',
+    groups:[{title:'',items:[{
+      q:'Response',
+      a:'"Totally fair question. Pricing is something our advisor goes over with you directly on the call — they need to look at your profile first to give you accurate numbers. What I can tell you is we\'ve helped 300+ business owners get $35k to $100k+ in 0% interest business credit, and everything gets laid out transparently on that call — no surprises.<br><br>That\'s really the best place to get all your questions answered. Can we lock in a time?"'
+    }]}]
+  }
+};
+
+let setterCurrent = 0;
+const setterCompleted = new Set();
+const setterNotes = {};
+
+function setMode(mode){
+  window.appMode = mode;
+  document.getElementById('modeCloser').classList.toggle('active', mode==='closer');
+  document.getElementById('modeSetter').classList.toggle('active', mode==='setter');
+  document.getElementById('modeSam').classList.toggle('active', mode==='sam');
+  const navLabel = document.querySelector('.nav-label');
+  if(mode==='setter'){
+    navLabel.textContent = 'Setter Flow';
+    setterCurrent = 0;
+    renderSetterNav();
+    renderSetterStage(0);
+    renderSetterPanel();
+    document.querySelector('.info-strip').style.display = 'none';
+  } else if(mode==='sam'){
+    navLabel.textContent = "Sam's Script";
+    samCurrent = 0;
+    renderSamNav();
+    renderSamStage(0);
+    renderCloserPanel();
+    document.querySelector('.info-strip').style.display = '';
+  } else {
+    navLabel.textContent = 'Call Flow';
+    renderNav();
+    renderStage(current);
+    renderCloserPanel();
+    document.querySelector('.info-strip').style.display = '';
+  }
+}
+
+function renderSamNav(){
+  const list = document.getElementById('navList');
+  list.innerHTML = SAM_STAGES.map((s,i)=>`
+    <li class="nav-item ${i===samCurrent?'active':''} ${samCompleted.has(i)?'done':''}" onclick="gotoSam(${i})">
+      <span class="idx">0${i+1}</span>
+      <span>${s.title}</span>
+      <span class="check">${samCompleted.has(i)?'✓':''}</span>
+    </li>
+  `).join('');
+}
+
+function renderSamStage(i){
+  const s = SAM_STAGES[i];
+  document.getElementById('stageTitle').innerHTML = s.title;
+  document.getElementById('stageMeta').textContent = s.meta;
+  let html = '';
+  s.blocks.forEach(b=>{
+    const cls = b.caution?'script-block caution':(b.highlight?'script-block highlight':'script-block');
+    html += `<div class="${cls}">
+      <div class="script-block-head"><span class="script-label">${b.label}</span></div>
+      <h2 class="script-heading">${b.heading}</h2>
+      <div class="script-body">${fillTokens(b.body)}</div>
+    </div>`;
+  });
+  if(s.prompts && s.prompts.length){
+    html += `<div class="script-block"><div class="script-block-head"><span class="script-label">Checklist</span></div><div class="prompts">`;
+    s.prompts.forEach((p,pi)=>{
+      const key = `sam-${s.id}-${pi}`;
+      const checked = promptChecks[key]?'checked':'';
+      html += `<div class="prompt ${checked}" onclick="togglePrompt('${key}')"><div class="prompt-check">✓</div><div class="prompt-text">${p}</div></div>`;
+    });
+    html += `</div></div>`;
+  }
+  html += `<div class="notes-block">
+    <label>Notes — ${s.title}</label>
+    <textarea oninput="samNotes['${s.id}']=this.value" placeholder="Quotes, reactions, red flags…">${samNotes[s.id]||''}</textarea>
+  </div>`;
+  document.getElementById('stageContent').innerHTML = html;
+  document.getElementById('btnPrev').disabled = i===0;
+  document.getElementById('btnPrev').style.opacity = i===0?'.4':'1';
+  document.getElementById('btnNext').textContent = i===SAM_STAGES.length-1?'Finish Call ✓':'Next Stage →';
+  renderSamNav();
+}
+
+function gotoSam(i){
+  samCurrent = i;
+  renderSamStage(i);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderSetterNav(){
+  const list = document.getElementById('navList');
+  list.innerHTML = SETTER_STAGES.map((s,i)=>`
+    <li class="nav-item ${i===setterCurrent?'active':''} ${setterCompleted.has(i)?'done':''}" onclick="gotoSetter(${i})">
+      <span class="idx">0${i+1}</span>
+      <span>${s.title}</span>
+      <span class="check">${setterCompleted.has(i)?'✓':''}</span>
+    </li>
+  `).join('');
+}
+
+function renderSetterStage(i){
+  const s = SETTER_STAGES[i];
+  document.getElementById('stageTitle').innerHTML = s.title;
+  document.getElementById('stageMeta').textContent = s.meta;
+  let html = '';
+  s.blocks.forEach(b=>{
+    const cls = b.highlight?'script-block highlight':'script-block';
+    html += `<div class="${cls}">
+      <div class="script-block-head"><span class="script-label">${b.label}</span></div>
+      <h2 class="script-heading">${b.heading}</h2>
+      <div class="script-body">${fillTokens(b.body)}</div>
+    </div>`;
+  });
+  if(s.prompts && s.prompts.length){
+    html += `<div class="script-block"><div class="script-block-head"><span class="script-label">Checklist</span></div><div class="prompts">`;
+    s.prompts.forEach((p,pi)=>{
+      const key = `setter-${s.id}-${pi}`;
+      const checked = promptChecks[key]?'checked':'';
+      html += `<div class="prompt ${checked}" onclick="togglePrompt('${key}')"><div class="prompt-check">✓</div><div class="prompt-text">${p}</div></div>`;
+    });
+    html += `</div></div>`;
+  }
+  html += `<div class="notes-block">
+    <label>Notes — ${s.title}</label>
+    <textarea oninput="setterNotes['${s.id}']=this.value" placeholder="Reactions, flags, details to pass to closer…">${setterNotes[s.id]||''}</textarea>
+  </div>`;
+  document.getElementById('stageContent').innerHTML = html;
+  document.getElementById('btnPrev').disabled = i===0;
+  document.getElementById('btnPrev').style.opacity = i===0?'.4':'1';
+  document.getElementById('btnNext').textContent = i===SETTER_STAGES.length-1?'Finish Setter Call ✓':'Next Stage →';
+  renderSetterNav();
+}
+
+function renderSetterPanel(){
+  const tools = document.querySelector('.tools');
+  let html = `<div class="tool-section">
+    <div class="tool-head">Qualifier Checklist</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);cursor:pointer"><input type="checkbox" style="accent-color:var(--brand)"> Has a business or idea</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);cursor:pointer"><input type="checkbox" style="accent-color:var(--brand)"> Credit 680+</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);cursor:pointer"><input type="checkbox" style="accent-color:var(--brand)"> Open to capital now or 30–60 days</label>
+    </div>
+  </div>
+  <div class="tool-section">
+    <div class="tool-head">Objection Handles</div>
+    <button class="obj-cat" onclick="openSetterObj('s_number')"><span class="obj-num">01</span> "I don't remember the form"</button>
+    <button class="obj-cat" onclick="openSetterObj('s_notinterested')" style="border-color:var(--danger);color:var(--danger)"><span class="obj-num">!</span> "Not interested"</button>
+    <button class="obj-cat" onclick="openSetterObj('s_loan')"><span class="obj-num">02</span> "Is this a loan?"</button>
+    <button class="obj-cat" onclick="openSetterObj('s_sendinfo')"><span class="obj-num">03</span> "Send info first"</button>
+    <button class="obj-cat" onclick="openSetterObj('s_notime')"><span class="obj-num">04</span> "No time right now"</button>
+    <button class="obj-cat" onclick="openSetterObj('s_competitor')"><span class="obj-num">05</span> "Already working with someone"</button>
+    <button class="obj-cat" onclick="openSetterObj('s_diy')"><span class="obj-num">06</span> "I can do it on my own"</button>
+    <button class="obj-cat" onclick="openSetterObj('s_price')" style="border-color:var(--danger);color:var(--danger)"><span class="obj-num">!</span> "How much does it cost?"</button>
+  </div>
+  <div class="tool-section" id="setterObjExpanded" style="display:none">
+    <div class="tool-head" id="setterObjTitle"></div>
+    <div id="setterObjBody" style="font-size:13px;line-height:1.7;color:var(--ink-soft);padding-top:8px"></div>
+    <button class="util-btn" onclick="document.getElementById('setterObjExpanded').style.display='none'" style="margin-top:10px">✕ Close</button>
+  </div>
+  <div class="tool-section">
+    <div class="tool-head">Prospect Info</div>
+    <div class="info-field" style="margin-bottom:10px"><label>Name</label><input type="text" id="sName" placeholder="John Doe"></div>
+    <div class="info-field" style="margin-bottom:10px"><label>Credit (ballpark)</label><input type="text" id="sScore" placeholder="680+, 720, etc."></div>
+    <div class="info-field"><label>Appt Time</label><input type="text" id="sAppt" placeholder="Thurs 2pm EST"></div>
+  </div>`;
+  tools.innerHTML = html;
+}
+
+function renderCloserPanel(){
+  const tools = document.querySelector('.tools');
+  tools.innerHTML = `
+    <div class="tool-section">
+      <div class="tool-head">Tier Recommendation</div>
+      <div class="tier-result" id="tierResult"><div class="tier-label">Awaiting Data</div><div class="tier-name">—</div><div class="tier-range">Enter prospect info</div></div>
+      <div class="tier-criteria" id="tierCriteria">Fill in credit score, utilization, and credit age above to see tier placement.</div>
+    </div>
+    <div class="tool-section">
+      <div class="tool-head">Funding Potential <span style="color:var(--brand);font-weight:500">· 2x–2.5x Rule</span></div>
+      <div class="potential-card empty" id="potentialCard">
+        <div class="potential-label">Personal CC Limits</div>
+        <div class="potential-input">—</div>
+        <div class="potential-arrow">↓</div>
+        <div class="potential-range" id="potentialRange">Enter total limits above</div>
+        <div class="potential-sub">Business funding potential</div>
+      </div>
+      <div class="tier-criteria">Banks lend 2–2.5x your personal limits. They need to see you handle high limits personally before trusting you on the business side.</div>
+    </div>
+    <div class="tool-section">
+      <div class="tool-head">Quick Objections</div>
+      <button class="obj-cat" onclick="openModal('objections','framework')" style="border-color:var(--brand);background:var(--brand-bg)"><span class="obj-num">★</span> <strong>ARP Framework</strong></button>
+      <button class="obj-cat" onclick="openModal('objections','price_early')" style="border-color:var(--danger);color:var(--danger)"><span class="obj-num">!</span> <strong>"What's your price?"</strong> (upfront)</button>
+      <button class="obj-cat" onclick="openModal('objections','uncertainty')"><span class="obj-num">01</span> Uncertainty</button>
+      <button class="obj-cat" onclick="openModal('objections','support')"><span class="obj-num">02</span> Need to check w/ someone</button>
+      <button class="obj-cat" onclick="openModal('objections','financial')"><span class="obj-num">03</span> Financial concern</button>
+      <button class="obj-cat" onclick="openModal('objections','upfront')"><span class="obj-num">04</span> "Why pay upfront?"</button>
+      <button class="obj-cat" onclick="openModal('objections','why35k')"><span class="obj-num">05</span> "Why only $35k?"</button>
+      <button class="obj-cat" onclick="openModal('objections','different')"><span class="obj-num">06</span> "What makes you different?"</button>
+      <button class="obj-cat" onclick="openModal('objections','competitor')"><span class="obj-num">07</span> "Already working with someone"</button>
+      <button class="obj-cat" onclick="openModal('objections','diy')"><span class="obj-num">08</span> "I can do it on my own"</button>
+    </div>
+    <div class="tool-section">
+      <div class="tool-head">Investment</div>
+      <div class="invest-card">
+        <div class="invest-price">$4,800</div>
+        <div class="invest-desc"><strong>PIF</strong> · <strong>2-pay:</strong> $2,500 now + $2,500 in 30d · <strong>Back-end:</strong> $2k + 8%</div>
+      </div>
+    </div>`;
+  calcTier();
+  calcPotential();
+}
+
+function openSetterObj(key){
+  const o = SETTER_OBJECTIONS[key];
+  if(!o) return;
+  const panel = document.getElementById('setterObjExpanded');
+  const titleEl = document.getElementById('setterObjTitle');
+  const bodyEl = document.getElementById('setterObjBody');
+  if(!panel){ return; }
+  titleEl.textContent = o.title;
+  let html = '';
+  o.groups.forEach(g=>{
+    g.items.forEach(it=>{
+      html += `<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">${it.q}</div><div>${it.a}</div></div>`;
+    });
+  });
+  bodyEl.innerHTML = html;
+  panel.style.display = 'block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function gotoSetter(i){
+  setterCurrent = i;
+  renderSetterStage(i);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function closeModal(){document.getElementById('modalBack').classList.remove('open')}
+document.getElementById('modalBack').addEventListener('click',e=>{if(e.target.id==='modalBack')closeModal()});
+
+function exportSummary(){
+  const name = document.getElementById('pName').value || 'Prospect';
+  const limit = parseFloat(document.getElementById('pLimit').value) || 0;
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+  let txt = `CAPITAL QUEST — CALL SUMMARY\n${'='.repeat(40)}\n\n`;
+  txt += `Prospect: ${name}\n`;
+  txt += `Location: ${document.getElementById('pLoc').value || '—'}\n`;
+  txt += `Setter/Source: ${document.getElementById('pSetter').value || '—'}\n`;
+  txt += `Business: ${document.getElementById('pBiz').value || '—'}\n`;
+  txt += `Credit Score: ${document.getElementById('pScore').value || '—'}\n`;
+  txt += `Utilization: ${document.getElementById('pUtil').value || '—'}%\n`;
+  txt += `Credit Age: ${document.getElementById('pAge').value || '—'} yrs\n`;
+  txt += `Total Personal CC Limits: ${limit ? fmt(limit) : '—'}\n`;
+  txt += `Bank Relationships: ${document.getElementById('pBanks').value || '—'}\n`;
+  txt += `Funding Target: ${document.getElementById('pTarget').value || '—'}\n`;
+  txt += `Funding Potential (2x–2.5x): ${limit ? `${fmt(limit*2)} – ${fmt(limit*2.5)}` : '—'}\n`;
+  txt += `Tier: ${window.currentTier ? `${window.currentTier.name} — ${window.currentTier.range} (${window.currentTier.time})` : '—'}\n\n`;
+  txt += `NOTES BY STAGE\n${'-'.repeat(40)}\n`;
+  STAGES.forEach(s=>{
+    if(notes[s.id] && notes[s.id].trim()){
+      txt += `\n[${s.title.replace(/<\/?em>/g,'').toUpperCase()}]\n${notes[s.id]}\n`;
+    }
+  });
+  txt += `\nCall Duration: ${document.getElementById('timer').textContent}\n`;
+  const blob = new Blob([txt],{type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;a.download = `call-summary-${name.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function resetCall(){
+  if(!confirm('Reset this call and clear all data?')) return;
+  current = 0;
+  completed.clear();
+  Object.keys(notes).forEach(k=>delete notes[k]);
+  Object.keys(promptChecks).forEach(k=>delete promptChecks[k]);
+  ['pName','pLoc','pSetter','pBiz','pScore','pUtil','pTarget','pAge','pLimit','pBanks'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('prospectDisplay').textContent='—';
+  window.currentTier = null;
+  startTime = Date.now();
+  calcTier();
+  calcPotential();
+  renderStage(0);
+}
+
+/* ========== LIVE UPDATES ========== */
+['pName','pLoc','pSetter','pBiz','pScore','pUtil','pTarget','pAge','pLimit','pBanks'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{
+    if(id==='pName'){
+      const v = document.getElementById('pName').value.trim();
+      document.getElementById('prospectDisplay').textContent = v || '—';
+    }
+    calcTier();
+    calcPotential();
+    renderStage(current);
+  });
+});
+
+/* ========== INIT ========== */
+renderStage(0);
+renderNav();
+calcPotential();
+</script>
+
+</body>
+</html>
